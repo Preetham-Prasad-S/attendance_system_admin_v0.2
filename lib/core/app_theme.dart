@@ -10,7 +10,7 @@ class AppTheme {
     );
 
     return baseTheme.copyWith(
-      textTheme: GoogleFonts.openSansTextTheme(baseTheme.textTheme),
+      textTheme: GoogleFonts.quicksandTextTheme(baseTheme.textTheme),
     );
   }
 }
