@@ -4,8 +4,20 @@ import '../../../../core/app_colors.dart';
 import 'login_button.dart';
 import 'login_field.dart';
 
+typedef LoginCallback =
+    Future<void> Function({required String email, required String password});
+
 class LoginCard extends StatefulWidget {
-  const LoginCard({super.key});
+  const LoginCard({
+    super.key,
+    required this.onLogin,
+    required this.isLoading,
+    required this.errorMessage,
+  });
+
+  final LoginCallback onLogin;
+  final bool isLoading;
+  final String? errorMessage;
 
   @override
   State<LoginCard> createState() => _LoginCardState();
@@ -47,14 +59,22 @@ class _LoginCardState extends State<LoginCard> {
     return null;
   }
 
-  void _handleSignIn() {
-    if (_formKey.currentState?.validate() ?? false) {
-      FocusScope.of(context).unfocus();
+  Future<void> _handleSignIn() async {
+    if (!(_formKey.currentState?.validate() ?? false)) {
+      return;
     }
+
+    FocusScope.of(context).unfocus();
+
+    await widget.onLogin(
+      email: _emailController.text.trim(),
+      password: _passwordController.text,
+    );
   }
 
   @override
   Widget build(BuildContext context) {
+    final errorMessage = widget.errorMessage;
     const labelStyle = TextStyle(
       fontSize: 15.5,
       fontWeight: FontWeight.w700,
@@ -162,7 +182,18 @@ class _LoginCardState extends State<LoginCard> {
               ),
             ),
             const SizedBox(height: 18),
-            LoginButton(onPressed: _handleSignIn),
+            if (errorMessage != null) ...[
+              Text(
+                errorMessage,
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 13.5,
+                  color: Theme.of(context).colorScheme.error,
+                ),
+              ),
+              const SizedBox(height: 12),
+            ],
+            LoginButton(onPressed: _handleSignIn, isLoading: widget.isLoading),
           ],
         ),
       ),
