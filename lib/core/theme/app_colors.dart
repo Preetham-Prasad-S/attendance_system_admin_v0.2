@@ -8,8 +8,17 @@ class AppColors {
   static const Color brand = Color(0xFF00566B);
   static const Color muted = Color(0xFF6B7C8C);
   static const Color primary = Color(0xFF00A6C8);
+  static const Color primarySoft = Color(0xFFE5F8FB);
   static const Color border = Color(0xFFDCE6EE);
   static const Color canvas = Color(0xFFF3F8FC);
   static const Color shadow = Color(0x140B2B45);
   static const Color transperant = Color(0x00000000);
+
+  static const Color divider = Color(0xFFE9EDF2);
+  static const Color success = Color(0xFF16A34A);
+  static const Color successSoft = Color(0xFFE8F8EE);
+  static const Color warning = Color(0xFFB45309);
+  static const Color warningSoft = Color(0xFFFFF5E1);
+  static const Color danger = Color(0xFFE5484D);
+  static const Color dangerSoft = Color(0xFFFDE8EC);
 }

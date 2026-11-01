@@ -1,21 +1,23 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../../core/app_colors.dart';
+import '../../../../core/theme/app_colors.dart';
 import '../../../../core/dependency_injection.dart';
 import '../controller/auth_state.dart';
 import '../widgets/login_card.dart';
 
 class LoginScreen extends ConsumerWidget {
-  const LoginScreen({super.key});
+  const LoginScreen({super.key, this.errorMessage});
+
+  final String? errorMessage;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final authController = ref.read(authControllerProvider.notifier);
     final authState = ref.watch(authControllerProvider);
-    final errorMessage = switch (authState) {
+    final message = switch (authState) {
       AuthFailure(:final message) => message,
-      _ => null,
+      _ => errorMessage,
     };
     const footerStyle = TextStyle(fontSize: 13.5, color: AppColors.muted);
 
@@ -68,7 +70,7 @@ class LoginScreen extends ConsumerWidget {
                     );
                   },
                   isLoading: authState.isLoading,
-                  errorMessage: errorMessage,
+                  errorMessage: message,
                 ),
                 const SizedBox(height: 32),
                 const Text.rich(

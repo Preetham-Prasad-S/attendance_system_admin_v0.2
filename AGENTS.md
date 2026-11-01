@@ -23,8 +23,8 @@
 ## Structure and conventions
 
 - `lib/main.dart`: `MyApp` wires `AppTheme.light` and `home: LoginScreen`. There is no router or navigation layer yet.
-- `lib/core/app_colors.dart`: `AppColors` static-const palette. Use it instead of raw hex values.
-- `lib/core/app_theme.dart`: global `ThemeData` with Open Sans via `google_fonts`. The seed color is `deepPurple`, which does not match the brand palette; set brand colors explicitly with `AppColors`.
+- `lib/core/theme/app_colors.dart`: `AppColors` static-const palette. Use it instead of raw hex values.
+- `lib/core/theme/app_theme.dart`: global `ThemeData` with Quicksand via `google_fonts`. The seed color is `AppColors.primary`; build UI around the primary palette (`primary`, `primarySoft`, `brand`, `navy`) and avoid off-brand accent hues. Reserve `warning`/`danger` for semantic status and destructive actions.
 - Screens live flat in `lib/` (`login_screen.dart`); screen-local widgets stay in the screen file rather than a separate widgets directory. `LoginScreen` is stateful; helper widgets are private classes in the same file.
 - `test/widget_test.dart` is only a smoke test. `test/login_screen_test.dart` covers the form, password visibility, and 320/390/1456 layouts.
 - Repository methods return `Future<Either<AppFailure, T>>` via `fpdart`. Handle errors with a single generic `catch` that returns `Left(AppFailure)`; do not add separate `on AppException` branches.

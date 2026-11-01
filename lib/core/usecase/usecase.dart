@@ -1,6 +1,6 @@
 import 'package:fpdart/fpdart.dart';
 
-import 'error/app_failure.dart';
+import '../error/app_failure.dart';
 
 abstract class Usecase<UsecaseType, UsecaseParams> {
   const Usecase();
