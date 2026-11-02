@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 
-import '../../../../core/theme/app_colors.dart';
-import '../../../staff/presentation/screens/staff_screen.dart';
-import '../../../staff/presentation/widgets/app_sidebar.dart';
+import '../../core/theme/app_colors.dart';
+import '../../features/staff/presentation/screens/staff_screen.dart';
+import '../widget/app_sidebar.dart';
 
 class BaseScreen extends StatefulWidget {
   const BaseScreen({super.key});
@@ -14,16 +14,11 @@ class BaseScreen extends StatefulWidget {
 class _BaseScreenState extends State<BaseScreen> {
   final _scaffoldKey = GlobalKey<ScaffoldState>();
 
-  int _selectedIndex = 2;
+  int _selectedIndex = 1;
 
   static const _pages = <Widget>[
     _EmptySectionPage(title: 'Dashboard', icon: Icons.grid_view_rounded),
-    _EmptySectionPage(title: 'Students', icon: Icons.groups_outlined),
     StaffScreen(),
-    _EmptySectionPage(title: 'Timetable', icon: Icons.calendar_today_outlined),
-    _EmptySectionPage(title: 'Attendance', icon: Icons.fingerprint_rounded),
-    _EmptySectionPage(title: 'Leave Requests', icon: Icons.event_note_outlined),
-    _EmptySectionPage(title: 'Analytics', icon: Icons.insights_rounded),
   ];
 
   void _handleElementSelected(int index) {
@@ -41,10 +36,12 @@ class _BaseScreenState extends State<BaseScreen> {
       backgroundColor: AppColors.canvas,
       drawer: Drawer(
         width: 280,
-        backgroundColor: AppColors.white,
+        backgroundColor: AppColors.transperant,
+        elevation: 0,
+        shape: const RoundedRectangleBorder(),
         child: SafeArea(
           child: AppSidebar(
-            width: 280,
+            width: 250,
             selectedIndex: _selectedIndex,
             onElementSelected: _handleElementSelected,
           ),

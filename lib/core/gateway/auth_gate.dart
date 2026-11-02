@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../features/auth/presentation/screens/login_screen.dart';
 import '../../features/auth/presentation/screens/splash_screen.dart';
-import '../../features/dashboard/presentation/screens/base_screen.dart';
+import '../../shared/screens/base_screen.dart';
 import '../dependency_injection.dart';
 
 class AuthGate extends ConsumerWidget {
