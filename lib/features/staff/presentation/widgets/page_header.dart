@@ -3,7 +3,9 @@ import 'package:flutter/material.dart';
 import '../../../../core/theme/app_colors.dart';
 
 class PageHeader extends StatelessWidget {
-  const PageHeader({super.key});
+  const PageHeader({super.key, required this.onAddFaculty});
+
+  final VoidCallback onAddFaculty;
 
   @override
   Widget build(BuildContext context) {
@@ -67,15 +69,20 @@ class PageHeader extends StatelessWidget {
                 ),
               ],
             );
-            const actions = Wrap(
+            final actions = Wrap(
               spacing: 10,
               runSpacing: 10,
               children: [
-                _HeaderAction(icon: Icons.download_rounded, label: 'Export'),
+                _HeaderAction(
+                  icon: Icons.download_rounded,
+                  label: 'Export',
+                  onPressed: _handleExport,
+                ),
                 _HeaderAction(
                   icon: Icons.add_rounded,
                   label: 'Add Faculty',
                   primary: true,
+                  onPressed: onAddFaculty,
                 ),
               ],
             );
@@ -106,11 +113,13 @@ class _HeaderAction extends StatelessWidget {
   const _HeaderAction({
     required this.icon,
     required this.label,
+    required this.onPressed,
     this.primary = false,
   });
 
   final IconData icon;
   final String label;
+  final VoidCallback onPressed;
   final bool primary;
 
   @override
@@ -122,7 +131,7 @@ class _HeaderAction extends StatelessWidget {
 
     if (primary) {
       return FilledButton.icon(
-        onPressed: () {},
+        onPressed: onPressed,
         icon: Icon(icon, size: 16),
         label: Text(label),
         style: FilledButton.styleFrom(
@@ -139,7 +148,7 @@ class _HeaderAction extends StatelessWidget {
     }
 
     return OutlinedButton.icon(
-      onPressed: () {},
+      onPressed: onPressed,
       icon: Icon(icon, size: 16),
       label: Text(label),
       style: OutlinedButton.styleFrom(
@@ -155,3 +164,5 @@ class _HeaderAction extends StatelessWidget {
     );
   }
 }
+
+void _handleExport() {}

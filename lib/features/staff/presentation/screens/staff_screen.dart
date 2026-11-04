@@ -1,12 +1,17 @@
 import 'package:flutter/material.dart';
 
 import '../../../../core/theme/app_colors.dart';
+import '../widgets/add_faculty_dialog/add_faculty_dialog.dart';
 import '../widgets/faculty_table.dart';
 import '../widgets/filter_bar.dart';
 import '../widgets/page_header.dart';
 
 class StaffScreen extends StatelessWidget {
   const StaffScreen({super.key});
+
+  void _handleAddFaculty(BuildContext context) {
+    showAddFacultyDialog(context);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -29,12 +34,12 @@ class StaffScreen extends StatelessWidget {
           padding: const EdgeInsets.all(24),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: const [
-              PageHeader(),
-              SizedBox(height: 22),
-              FilterBar(),
-              SizedBox(height: 18),
-              FacultyTable(),
+            children: [
+              PageHeader(onAddFaculty: () => _handleAddFaculty(context)),
+              const SizedBox(height: 22),
+              const FilterBar(),
+              const SizedBox(height: 18),
+              const FacultyTable(),
             ],
           ),
         ),
