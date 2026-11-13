@@ -3,10 +3,19 @@ import 'package:flutter/material.dart';
 import '../../../../core/theme/app_colors.dart';
 
 class FacultyTable extends StatelessWidget {
-  const FacultyTable({super.key});
+  const FacultyTable({super.key, this.searchQuery = ''});
+
+  final String searchQuery;
 
   @override
   Widget build(BuildContext context) {
+    final filteredMembers = _members.where((member) {
+      if (searchQuery.isEmpty) return true;
+      return member.name.toLowerCase().contains(searchQuery) ||
+          member.employeeId.toLowerCase().contains(searchQuery) ||
+          member.email.toLowerCase().contains(searchQuery);
+    }).toList();
+
     return LayoutBuilder(
       builder: (context, constraints) {
         final showContact = constraints.maxWidth >= 640;
@@ -22,25 +31,66 @@ class FacultyTable extends StatelessWidget {
             child: Column(
               children: [
                 _TableHeader(showContact: showContact, showStatus: showStatus),
-                for (var index = 0; index < _members.length; index++) ...[
+                for (
+                  var index = 0;
+                  index < filteredMembers.length;
+                  index++
+                ) ...[
                   _FacultyRow(
-                    member: _members[index],
+                    member: filteredMembers[index],
                     showContact: showContact,
                     showStatus: showStatus,
                   ),
-                  if (index < _members.length - 1)
+                  if (index < filteredMembers.length - 1)
                     const Divider(
                       height: 1,
                       thickness: 1,
                       color: AppColors.divider,
                     ),
                 ],
-                const _TablePagination(),
+                if (filteredMembers.isEmpty) const _EmptySearchResult(),
+                _TablePagination(totalRecords: filteredMembers.length),
               ],
             ),
           ),
         );
       },
+    );
+  }
+}
+
+class _EmptySearchResult extends StatelessWidget {
+  const _EmptySearchResult();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: 120,
+      alignment: Alignment.center,
+      child: const Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.search_off_rounded, size: 32, color: AppColors.muted),
+          SizedBox(height: 10),
+          Text(
+            'No faculty found',
+            style: TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+              color: AppColors.navy,
+            ),
+          ),
+          SizedBox(height: 4),
+          Text(
+            'Try adjusting your search terms',
+            style: TextStyle(
+              fontSize: 11.5,
+              fontWeight: FontWeight.w500,
+              color: AppColors.muted,
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -428,7 +478,9 @@ class _UserAvatar extends StatelessWidget {
 }
 
 class _TablePagination extends StatelessWidget {
-  const _TablePagination();
+  const _TablePagination({required this.totalRecords});
+
+  final int totalRecords;
 
   @override
   Widget build(BuildContext context) {
@@ -455,9 +507,9 @@ class _TablePagination extends StatelessWidget {
                 const _RowsPerPage(),
               ],
               const Spacer(),
-              const Text(
-                '1 – 5 of 48',
-                style: TextStyle(
+              Text(
+                '1 – $totalRecords of $totalRecords',
+                style: const TextStyle(
                   fontSize: 10.5,
                   fontWeight: FontWeight.w500,
                   color: AppColors.muted,

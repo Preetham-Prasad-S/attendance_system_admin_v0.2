@@ -2,8 +2,23 @@ import 'package:flutter/material.dart';
 
 import '../../../../core/theme/app_colors.dart';
 
-class FilterBar extends StatelessWidget {
-  const FilterBar({super.key});
+class FilterBar extends StatefulWidget {
+  const FilterBar({super.key, this.onSearchChanged});
+
+  final ValueChanged<String>? onSearchChanged;
+
+  @override
+  State<FilterBar> createState() => _FilterBarState();
+}
+
+class _FilterBarState extends State<FilterBar> {
+  final _searchController = TextEditingController();
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -12,17 +27,20 @@ class FilterBar extends StatelessWidget {
         final compact = constraints.maxWidth < 600;
 
         if (compact) {
-          return const Column(
+          return Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              _SearchField(),
-              SizedBox(height: 10),
+              _SearchField(
+                controller: _searchController,
+                onChanged: widget.onSearchChanged,
+              ),
+              const SizedBox(height: 10),
               Row(
                 children: [
                   Expanded(
                     child: _FilterDropdown(label: 'Computer Science & Eng'),
                   ),
-                  SizedBox(width: 10),
+                  const SizedBox(width: 10),
                   Expanded(child: _FilterDropdown(label: 'All Statuses')),
                 ],
               ),
@@ -30,17 +48,22 @@ class FilterBar extends StatelessWidget {
           );
         }
 
-        return const Row(
+        return Row(
           children: [
-            Expanded(child: _SearchField()),
-            SizedBox(width: 10),
+            Expanded(
+              child: _SearchField(
+                controller: _searchController,
+                onChanged: widget.onSearchChanged,
+              ),
+            ),
+            const SizedBox(width: 10),
             SizedBox(
               width: 160,
               child: _FilterDropdown(label: 'Computer Science & Eng'),
             ),
-            SizedBox(width: 10),
+            const SizedBox(width: 10),
             SizedBox(width: 104, child: _FilterDropdown(label: 'All Statuses')),
-            SizedBox(width: 10),
+            const SizedBox(width: 10),
             _TotalRecords(),
           ],
         );
@@ -50,35 +73,73 @@ class FilterBar extends StatelessWidget {
 }
 
 class _SearchField extends StatelessWidget {
-  const _SearchField();
+  const _SearchField({required this.controller, this.onChanged});
+
+  final TextEditingController controller;
+  final ValueChanged<String>? onChanged;
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      height: 44,
-      padding: const EdgeInsets.symmetric(horizontal: 13),
-      decoration: BoxDecoration(
-        color: AppColors.white,
-        border: Border.all(color: AppColors.border),
-        borderRadius: BorderRadius.circular(7),
+    return TextField(
+      controller: controller,
+      onChanged: onChanged,
+      style: const TextStyle(
+        fontSize: 12,
+        fontWeight: FontWeight.w500,
+        color: AppColors.navy,
       ),
-      child: const Row(
-        children: [
-          Icon(Icons.search_rounded, size: 18, color: AppColors.muted),
-          SizedBox(width: 10),
-          Expanded(
-            child: Text(
-              'Search faculty by name, ID, or email...',
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w500,
-                color: AppColors.muted,
-              ),
-            ),
-          ),
-        ],
+      decoration: InputDecoration(
+        hintText: 'Search faculty by name, ID, or email...',
+        hintStyle: const TextStyle(
+          fontSize: 12,
+          fontWeight: FontWeight.w500,
+          color: AppColors.muted,
+        ),
+        prefixIcon: const Icon(
+          Icons.search_rounded,
+          size: 18,
+          color: AppColors.muted,
+        ),
+        prefixIconConstraints: const BoxConstraints(
+          minWidth: 44,
+          minHeight: 44,
+        ),
+        suffixIcon: controller.text.isNotEmpty
+            ? IconButton(
+                onPressed: () {
+                  controller.clear();
+                  onChanged?.call('');
+                },
+                icon: const Icon(
+                  Icons.close_rounded,
+                  size: 16,
+                  color: AppColors.muted,
+                ),
+                splashRadius: 18,
+              )
+            : null,
+        suffixIconConstraints: const BoxConstraints(
+          minWidth: 44,
+          minHeight: 44,
+        ),
+        filled: true,
+        fillColor: AppColors.white,
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 13,
+          vertical: 13,
+        ),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(7),
+          borderSide: const BorderSide(color: AppColors.border),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(7),
+          borderSide: const BorderSide(color: AppColors.border),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(7),
+          borderSide: const BorderSide(color: AppColors.primary, width: 1.4),
+        ),
       ),
     );
   }

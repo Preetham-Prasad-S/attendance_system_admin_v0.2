@@ -6,11 +6,22 @@ import '../widgets/faculty_table.dart';
 import '../widgets/filter_bar.dart';
 import '../widgets/page_header.dart';
 
-class StaffScreen extends StatelessWidget {
+class StaffScreen extends StatefulWidget {
   const StaffScreen({super.key});
+
+  @override
+  State<StaffScreen> createState() => _StaffScreenState();
+}
+
+class _StaffScreenState extends State<StaffScreen> {
+  String _searchQuery = '';
 
   void _handleAddFaculty(BuildContext context) {
     showAddFacultyDialog(context);
+  }
+
+  void _handleSearchChanged(String query) {
+    setState(() => _searchQuery = query.toLowerCase());
   }
 
   @override
@@ -37,9 +48,9 @@ class StaffScreen extends StatelessWidget {
             children: [
               PageHeader(onAddFaculty: () => _handleAddFaculty(context)),
               const SizedBox(height: 22),
-              const FilterBar(),
+              FilterBar(onSearchChanged: _handleSearchChanged),
               const SizedBox(height: 18),
-              const FacultyTable(),
+              FacultyTable(searchQuery: _searchQuery),
             ],
           ),
         ),
