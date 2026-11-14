@@ -7,10 +7,12 @@ class AddFacultyDialogActions extends StatelessWidget {
     super.key,
     required this.onCancel,
     required this.onSave,
+    this.isSaving = false,
   });
 
   final VoidCallback onCancel;
   final VoidCallback onSave;
+  final bool isSaving;
 
   @override
   Widget build(BuildContext context) {
@@ -23,7 +25,7 @@ class AddFacultyDialogActions extends StatelessWidget {
       overflowSpacing: 10,
       children: [
         TextButton(
-          onPressed: onCancel,
+          onPressed: isSaving ? null : onCancel,
           style: TextButton.styleFrom(
             foregroundColor: AppColors.mutedStrong,
             minimumSize: const Size(0, 38),
@@ -40,9 +42,18 @@ class AddFacultyDialogActions extends StatelessWidget {
           child: const Text('Cancel'),
         ),
         FilledButton.icon(
-          onPressed: onSave,
-          icon: const Icon(Icons.check_rounded, size: 15),
-          label: const Text('Save Faculty Member'),
+          onPressed: isSaving ? null : onSave,
+          icon: isSaving
+              ? const SizedBox(
+                  width: 14,
+                  height: 14,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: AppColors.white,
+                  ),
+                )
+              : const Icon(Icons.check_rounded, size: 15),
+          label: Text(isSaving ? 'Saving...' : 'Save Faculty Member'),
           style: FilledButton.styleFrom(
             backgroundColor: AppColors.primary,
             foregroundColor: AppColors.white,

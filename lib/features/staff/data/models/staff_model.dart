@@ -18,24 +18,33 @@ class StaffModel {
   final int? phoneNo;
 
   factory StaffModel.fromJson(Map<String, dynamic> json) => StaffModel(
-        id: json['id'] as int,
-        name: json['name'] as String,
-        email: json['email'] as String,
-        staffId: json['staff_id'] as String,
-        department: json['department'] as String,
-        position: json['position'] as String,
-        phoneNo: json['phone_no'] as int?,
-      );
+    id: json['id'] as int,
+    name: json['name'] as String,
+    email: json['email'] as String,
+    staffId: json['staff_id'] as String,
+    department: json['department'] as String,
+    position: json['position'] as String,
+    phoneNo: json['phone_no'] as int?,
+  );
 
   Map<String, dynamic> toJson() => {
-        'id': id,
-        'name': name,
-        'email': email,
-        'staff_id': staffId,
-        'department': department,
-        'position': position,
-        'phone_no': phoneNo,
-      };
+    'id': id,
+    'name': name,
+    'email': email,
+    'staff_id': staffId,
+    'department': department,
+    'position': position,
+    'phone_no': phoneNo,
+  };
+
+  Map<String, dynamic> toInsertJson() => {
+    'name': name,
+    'email': email,
+    'staff_id': staffId,
+    'department': department,
+    'position': position,
+    'phone_no': phoneNo,
+  };
 
   @override
   String toString() {
@@ -58,5 +67,11 @@ class StaffModel {
 
   @override
   int get hashCode =>
-      id.hashCode ^ name.hashCode ^ email.hashCode ^ staffId.hashCode ^ department.hashCode ^ position.hashCode ^ phoneNo.hashCode;
+      id.hashCode ^
+      name.hashCode ^
+      email.hashCode ^
+      staffId.hashCode ^
+      department.hashCode ^
+      position.hashCode ^
+      phoneNo.hashCode;
 }

@@ -16,10 +16,4 @@ class AddFacultyOptions {
     'Senior Lab Instructor',
     'Lecturer',
   ];
-
-  static const List<String> statuses = <String>[
-    'Active',
-    'On Leave',
-    'Inactive',
-  ];
 }

@@ -1,11 +1,23 @@
 import 'package:flutter/material.dart';
 
 import '../../../../core/theme/app_colors.dart';
+import '../models/staff_member.dart';
 
 class FilterBar extends StatefulWidget {
-  const FilterBar({super.key, this.onSearchChanged});
+  const FilterBar({
+    super.key,
+    this.departmentOptions = const [allDepartmentsLabel],
+    this.onSearchChanged,
+    this.onDepartmentChanged,
+    this.onStatusChanged,
+    this.totalRecords,
+  });
 
+  final List<String> departmentOptions;
   final ValueChanged<String>? onSearchChanged;
+  final ValueChanged<String>? onDepartmentChanged;
+  final ValueChanged<String>? onStatusChanged;
+  final int? totalRecords;
 
   @override
   State<FilterBar> createState() => _FilterBarState();
@@ -13,15 +25,38 @@ class FilterBar extends StatefulWidget {
 
 class _FilterBarState extends State<FilterBar> {
   final _searchController = TextEditingController();
+  String _department = allDepartmentsLabel;
+  String _status = allStatusesLabel;
+
+  @override
+  void initState() {
+    super.initState();
+    _searchController.addListener(_handleSearchTextChanged);
+  }
+
+  void _handleSearchTextChanged() => setState(() {});
 
   @override
   void dispose() {
+    _searchController.removeListener(_handleSearchTextChanged);
     _searchController.dispose();
     super.dispose();
   }
 
+  void _handleDepartmentSelected(String value) {
+    setState(() => _department = value);
+    widget.onDepartmentChanged?.call(value);
+  }
+
+  void _handleStatusSelected(String value) {
+    setState(() => _status = value);
+    widget.onStatusChanged?.call(value);
+  }
+
   @override
   Widget build(BuildContext context) {
+    final totalRecords = widget.totalRecords ?? 0;
+
     return LayoutBuilder(
       builder: (context, constraints) {
         final compact = constraints.maxWidth < 600;
@@ -38,10 +73,20 @@ class _FilterBarState extends State<FilterBar> {
               Row(
                 children: [
                   Expanded(
-                    child: _FilterDropdown(label: 'Computer Science & Eng'),
+                    child: _FilterDropdown(
+                      label: _department,
+                      options: widget.departmentOptions,
+                      onSelected: _handleDepartmentSelected,
+                    ),
                   ),
                   const SizedBox(width: 10),
-                  Expanded(child: _FilterDropdown(label: 'All Statuses')),
+                  Expanded(
+                    child: _FilterDropdown(
+                      label: _status,
+                      options: staffStatusOptions,
+                      onSelected: _handleStatusSelected,
+                    ),
+                  ),
                 ],
               ),
             ],
@@ -59,12 +104,23 @@ class _FilterBarState extends State<FilterBar> {
             const SizedBox(width: 10),
             SizedBox(
               width: 160,
-              child: _FilterDropdown(label: 'Computer Science & Eng'),
+              child: _FilterDropdown(
+                label: _department,
+                options: widget.departmentOptions,
+                onSelected: _handleDepartmentSelected,
+              ),
             ),
             const SizedBox(width: 10),
-            SizedBox(width: 104, child: _FilterDropdown(label: 'All Statuses')),
+            SizedBox(
+              width: 104,
+              child: _FilterDropdown(
+                label: _status,
+                options: staffStatusOptions,
+                onSelected: _handleStatusSelected,
+              ),
+            ),
             const SizedBox(width: 10),
-            _TotalRecords(),
+            _TotalRecords(count: totalRecords),
           ],
         );
       },
@@ -146,48 +202,101 @@ class _SearchField extends StatelessWidget {
 }
 
 class _FilterDropdown extends StatelessWidget {
-  const _FilterDropdown({required this.label});
+  const _FilterDropdown({
+    required this.label,
+    required this.options,
+    required this.onSelected,
+  });
 
   final String label;
+  final List<String> options;
+  final ValueChanged<String> onSelected;
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      height: 44,
-      padding: const EdgeInsets.symmetric(horizontal: 12),
-      decoration: BoxDecoration(
-        color: AppColors.white,
-        border: Border.all(color: AppColors.border),
-        borderRadius: BorderRadius.circular(7),
-      ),
-      child: Row(
-        children: [
-          Expanded(
-            child: Text(
-              label,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: const TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
-                color: AppColors.navy,
-              ),
+    return PopupMenuButton<String>(
+      onSelected: onSelected,
+      tooltip: '',
+      offset: const Offset(0, 44),
+      color: AppColors.white,
+      elevation: 6,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(7)),
+      itemBuilder: (context) => [
+        for (final option in options)
+          PopupMenuItem<String>(
+            value: option,
+            height: 36,
+            child: Row(
+              children: [
+                SizedBox(
+                  width: 20,
+                  child: option == label
+                      ? const Icon(
+                          Icons.check_rounded,
+                          size: 15,
+                          color: AppColors.primary,
+                        )
+                      : null,
+                ),
+                Expanded(
+                  child: Text(
+                    option,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: option == label
+                          ? FontWeight.w700
+                          : FontWeight.w500,
+                      color: option == label
+                          ? AppColors.primary
+                          : AppColors.navy,
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
-          const SizedBox(width: 8),
-          const Icon(
-            Icons.keyboard_arrow_down_rounded,
-            size: 18,
-            color: AppColors.muted,
-          ),
-        ],
+      ],
+      child: Container(
+        height: 44,
+        padding: const EdgeInsets.symmetric(horizontal: 12),
+        decoration: BoxDecoration(
+          color: AppColors.white,
+          border: Border.all(color: AppColors.border),
+          borderRadius: BorderRadius.circular(7),
+        ),
+        child: Row(
+          children: [
+            Expanded(
+              child: Text(
+                label,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.navy,
+                ),
+              ),
+            ),
+            const SizedBox(width: 8),
+            const Icon(
+              Icons.keyboard_arrow_down_rounded,
+              size: 18,
+              color: AppColors.muted,
+            ),
+          ],
+        ),
       ),
     );
   }
 }
 
 class _TotalRecords extends StatelessWidget {
-  const _TotalRecords();
+  const _TotalRecords({required this.count});
+
+  final int count;
 
   @override
   Widget build(BuildContext context) {
@@ -200,9 +309,9 @@ class _TotalRecords extends StatelessWidget {
         borderRadius: BorderRadius.circular(7),
       ),
       alignment: Alignment.center,
-      child: const Text(
-        'Total Records: 48',
-        style: TextStyle(
+      child: Text(
+        'Total Records: $count',
+        style: const TextStyle(
           fontSize: 11.5,
           fontWeight: FontWeight.w600,
           color: AppColors.muted,

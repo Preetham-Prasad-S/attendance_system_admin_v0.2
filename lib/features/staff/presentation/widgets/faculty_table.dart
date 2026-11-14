@@ -1,20 +1,87 @@
 import 'package:flutter/material.dart';
 
 import '../../../../core/theme/app_colors.dart';
+import '../models/staff_member.dart';
 
-class FacultyTable extends StatelessWidget {
-  const FacultyTable({super.key, this.searchQuery = ''});
+class FacultyTable extends StatefulWidget {
+  const FacultyTable({super.key, required this.members});
 
-  final String searchQuery;
+  final List<StaffMember> members;
+
+  @override
+  State<FacultyTable> createState() => _FacultyTableState();
+}
+
+class _FacultyTableState extends State<FacultyTable> {
+  static const _rowsPerPageOptions = <int>[5, 10, 25, 50];
+
+  static const _maxVisiblePages = 3;
+
+  int _rowsPerPage = 10;
+  int _currentPage = 1;
+
+  int get _totalPages => _totalPagesFor(widget.members.length);
+
+  int _totalPagesFor(int recordCount) {
+    if (recordCount == 0) return 1;
+    return (recordCount + _rowsPerPage - 1) ~/ _rowsPerPage;
+  }
+
+  @override
+  void didUpdateWidget(covariant FacultyTable oldWidget) {
+    super.didUpdateWidget(oldWidget);
+
+    if (oldWidget.members.length != widget.members.length) {
+      final totalPages = _totalPagesFor(widget.members.length);
+      if (_currentPage > totalPages) {
+        _currentPage = totalPages;
+      }
+    }
+  }
+
+  void _handleRowsPerPageChanged(int rowsPerPage) {
+    setState(() {
+      _rowsPerPage = rowsPerPage;
+      _currentPage = 1;
+    });
+  }
+
+  void _handlePageChanged(int page) {
+    final totalPages = _totalPages;
+
+    if (page < 1 || page > totalPages || page == _currentPage) {
+      return;
+    }
+
+    setState(() => _currentPage = page);
+  }
+
+  List<int> _visiblePages() {
+    final totalPages = _totalPages;
+
+    if (totalPages <= _maxVisiblePages) {
+      return [for (var page = 1; page <= totalPages; page++) page];
+    }
+
+    var firstPage = _currentPage - 1;
+    if (firstPage < 1) firstPage = 1;
+    if (firstPage + _maxVisiblePages - 1 > totalPages) {
+      firstPage = totalPages - _maxVisiblePages + 1;
+    }
+
+    return [
+      for (var page = firstPage; page < firstPage + _maxVisiblePages; page++)
+        page,
+    ];
+  }
 
   @override
   Widget build(BuildContext context) {
-    final filteredMembers = _members.where((member) {
-      if (searchQuery.isEmpty) return true;
-      return member.name.toLowerCase().contains(searchQuery) ||
-          member.employeeId.toLowerCase().contains(searchQuery) ||
-          member.email.toLowerCase().contains(searchQuery);
-    }).toList();
+    final startIndex = (_currentPage - 1) * _rowsPerPage;
+    final pageMembers = widget.members
+        .skip(startIndex)
+        .take(_rowsPerPage)
+        .toList();
 
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -31,25 +98,30 @@ class FacultyTable extends StatelessWidget {
             child: Column(
               children: [
                 _TableHeader(showContact: showContact, showStatus: showStatus),
-                for (
-                  var index = 0;
-                  index < filteredMembers.length;
-                  index++
-                ) ...[
+                for (var index = 0; index < pageMembers.length; index++) ...[
                   _FacultyRow(
-                    member: filteredMembers[index],
+                    member: pageMembers[index],
                     showContact: showContact,
                     showStatus: showStatus,
                   ),
-                  if (index < filteredMembers.length - 1)
+                  if (index < pageMembers.length - 1)
                     const Divider(
                       height: 1,
                       thickness: 1,
                       color: AppColors.divider,
                     ),
                 ],
-                if (filteredMembers.isEmpty) const _EmptySearchResult(),
-                _TablePagination(totalRecords: filteredMembers.length),
+                if (widget.members.isEmpty) const _EmptySearchResult(),
+                _TablePagination(
+                  totalRecords: widget.members.length,
+                  currentPage: _currentPage,
+                  totalPages: _totalPages,
+                  visiblePages: _visiblePages(),
+                  rowsPerPage: _rowsPerPage,
+                  rowsPerPageOptions: _rowsPerPageOptions,
+                  onRowsPerPageChanged: _handleRowsPerPageChanged,
+                  onPageChanged: _handlePageChanged,
+                ),
               ],
             ),
           ),
@@ -82,7 +154,7 @@ class _EmptySearchResult extends StatelessWidget {
           ),
           SizedBox(height: 4),
           Text(
-            'Try adjusting your search terms',
+            'Try adjusting your search or filters',
             style: TextStyle(
               fontSize: 11.5,
               fontWeight: FontWeight.w500,
@@ -160,13 +232,13 @@ class _FacultyRow extends StatelessWidget {
     required this.showStatus,
   });
 
-  final _StaffMember member;
+  final StaffMember member;
   final bool showContact;
   final bool showStatus;
 
   @override
   Widget build(BuildContext context) {
-    final isActive = member.status == _StaffStatus.active;
+    final isActive = member.status == StaffStatus.active;
 
     return SizedBox(
       height: 66,
@@ -190,7 +262,7 @@ class _FacultyRow extends StatelessWidget {
                 child: Align(
                   alignment: Alignment.centerLeft,
                   child: _StatusPill(
-                    label: isActive ? 'Active' : 'On Leave',
+                    label: isActive ? activeStatusLabel : onLeaveStatusLabel,
                     active: isActive,
                   ),
                 ),
@@ -214,7 +286,7 @@ class _FacultyRow extends StatelessWidget {
 class _MemberCell extends StatelessWidget {
   const _MemberCell({required this.member});
 
-  final _StaffMember member;
+  final StaffMember member;
 
   @override
   Widget build(BuildContext context) {
@@ -223,7 +295,7 @@ class _MemberCell extends StatelessWidget {
         _UserAvatar(
           label: member.initials,
           color: member.avatarColor,
-          statusColor: member.status == _StaffStatus.active
+          statusColor: member.status == StaffStatus.active
               ? AppColors.success
               : AppColors.warning,
         ),
@@ -265,7 +337,7 @@ class _MemberCell extends StatelessWidget {
 class _DepartmentCell extends StatelessWidget {
   const _DepartmentCell({required this.member});
 
-  final _StaffMember member;
+  final StaffMember member;
 
   @override
   Widget build(BuildContext context) {
@@ -302,7 +374,7 @@ class _DepartmentCell extends StatelessWidget {
 class _ContactCell extends StatelessWidget {
   const _ContactCell({required this.member});
 
-  final _StaffMember member;
+  final StaffMember member;
 
   @override
   Widget build(BuildContext context) {
@@ -478,9 +550,34 @@ class _UserAvatar extends StatelessWidget {
 }
 
 class _TablePagination extends StatelessWidget {
-  const _TablePagination({required this.totalRecords});
+  const _TablePagination({
+    required this.totalRecords,
+    required this.currentPage,
+    required this.totalPages,
+    required this.visiblePages,
+    required this.rowsPerPage,
+    required this.rowsPerPageOptions,
+    required this.onRowsPerPageChanged,
+    required this.onPageChanged,
+  });
 
   final int totalRecords;
+  final int currentPage;
+  final int totalPages;
+  final List<int> visiblePages;
+  final int rowsPerPage;
+  final List<int> rowsPerPageOptions;
+  final ValueChanged<int> onRowsPerPageChanged;
+  final ValueChanged<int> onPageChanged;
+
+  String get _rangeLabel {
+    if (totalRecords == 0) return '0 of 0';
+
+    final firstRow = (currentPage - 1) * rowsPerPage + 1;
+    final lastRow = (currentPage * rowsPerPage).clamp(0, totalRecords);
+
+    return '$firstRow – $lastRow of $totalRecords';
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -504,11 +601,15 @@ class _TablePagination extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(width: 10),
-                const _RowsPerPage(),
+                _RowsPerPage(
+                  value: rowsPerPage,
+                  options: rowsPerPageOptions,
+                  onChanged: onRowsPerPageChanged,
+                ),
               ],
               const Spacer(),
               Text(
-                '1 – $totalRecords of $totalRecords',
+                _rangeLabel,
                 style: const TextStyle(
                   fontSize: 10.5,
                   fontWeight: FontWeight.w500,
@@ -516,15 +617,27 @@ class _TablePagination extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: 12),
-              const _PageButton(icon: Icons.chevron_left_rounded),
+              _PageButton(
+                icon: Icons.chevron_left_rounded,
+                onPressed: currentPage > 1
+                    ? () => onPageChanged(currentPage - 1)
+                    : null,
+              ),
+              for (final page in visiblePages) ...[
+                const SizedBox(width: 5),
+                _PageButton(
+                  label: '$page',
+                  active: page == currentPage,
+                  onPressed: () => onPageChanged(page),
+                ),
+              ],
               const SizedBox(width: 5),
-              const _PageButton(label: '1', active: true),
-              const SizedBox(width: 5),
-              const _PageButton(label: '2'),
-              const SizedBox(width: 5),
-              const _PageButton(label: '3'),
-              const SizedBox(width: 5),
-              const _PageButton(icon: Icons.chevron_right_rounded),
+              _PageButton(
+                icon: Icons.chevron_right_rounded,
+                onPressed: currentPage < totalPages
+                    ? () => onPageChanged(currentPage + 1)
+                    : null,
+              ),
             ],
           ),
         );
@@ -534,159 +647,129 @@ class _TablePagination extends StatelessWidget {
 }
 
 class _RowsPerPage extends StatelessWidget {
-  const _RowsPerPage();
+  const _RowsPerPage({
+    required this.value,
+    required this.options,
+    required this.onChanged,
+  });
+
+  final int value;
+  final List<int> options;
+  final ValueChanged<int> onChanged;
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      height: 26,
-      padding: const EdgeInsets.only(left: 7, right: 4),
-      decoration: BoxDecoration(
-        color: AppColors.white,
-        border: Border.all(color: AppColors.divider),
-        borderRadius: BorderRadius.circular(4),
-      ),
-      child: const Row(
-        children: [
-          Text(
-            '10',
-            style: TextStyle(
-              fontSize: 10,
-              fontWeight: FontWeight.w600,
-              color: AppColors.navy,
+    return PopupMenuButton<int>(
+      onSelected: onChanged,
+      tooltip: '',
+      padding: EdgeInsets.zero,
+      offset: const Offset(0, 26),
+      color: AppColors.white,
+      elevation: 6,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
+      itemBuilder: (context) => [
+        for (final option in options)
+          PopupMenuItem<int>(
+            value: option,
+            height: 32,
+            child: Text(
+              '$option',
+              style: TextStyle(
+                fontSize: 11,
+                fontWeight: option == value ? FontWeight.w700 : FontWeight.w500,
+                color: option == value ? AppColors.primary : AppColors.navy,
+              ),
             ),
           ),
-          SizedBox(width: 4),
-          Icon(
-            Icons.keyboard_arrow_down_rounded,
-            size: 12,
-            color: AppColors.muted,
-          ),
-        ],
+      ],
+      child: Container(
+        height: 26,
+        padding: const EdgeInsets.only(left: 7, right: 4),
+        decoration: BoxDecoration(
+          color: AppColors.white,
+          border: Border.all(color: AppColors.divider),
+          borderRadius: BorderRadius.circular(4),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              '$value',
+              style: const TextStyle(
+                fontSize: 10,
+                fontWeight: FontWeight.w600,
+                color: AppColors.navy,
+              ),
+            ),
+            const SizedBox(width: 4),
+            const Icon(
+              Icons.keyboard_arrow_down_rounded,
+              size: 12,
+              color: AppColors.muted,
+            ),
+          ],
+        ),
       ),
     );
   }
 }
 
 class _PageButton extends StatelessWidget {
-  const _PageButton({this.label, this.icon, this.active = false});
+  const _PageButton({
+    this.label,
+    this.icon,
+    this.active = false,
+    this.onPressed,
+  });
 
   final String? label;
   final IconData? icon;
   final bool active;
+  final VoidCallback? onPressed;
 
   @override
   Widget build(BuildContext context) {
-    final foreground = active ? AppColors.white : AppColors.navy;
+    final enabled = onPressed != null;
+    final foreground = active
+        ? AppColors.white
+        : enabled
+        ? AppColors.navy
+        : AppColors.muted;
 
-    return Container(
-      width: 26,
-      height: 26,
-      alignment: Alignment.center,
-      decoration: BoxDecoration(
-        color: active ? AppColors.primary : AppColors.white,
-        border: Border.all(
-          color: active ? AppColors.primary : AppColors.divider,
-        ),
-        borderRadius: BorderRadius.circular(4),
-      ),
-      child: icon != null
-          ? Icon(icon, size: 13, color: foreground)
-          : Text(
-              label!,
-              style: TextStyle(
-                fontSize: 10,
-                fontWeight: FontWeight.w600,
-                color: foreground,
+    return MouseRegion(
+      cursor: enabled ? SystemMouseCursors.click : SystemMouseCursors.basic,
+      child: Material(
+        color: AppColors.transperant,
+        child: InkWell(
+          onTap: onPressed,
+          borderRadius: BorderRadius.circular(4),
+          hoverColor: AppColors.primarySoft,
+          splashColor: AppColors.primarySoft,
+          child: Ink(
+            width: 26,
+            height: 26,
+            decoration: BoxDecoration(
+              color: active ? AppColors.primary : AppColors.white,
+              border: Border.all(
+                color: active ? AppColors.primary : AppColors.divider,
               ),
+              borderRadius: BorderRadius.circular(4),
             ),
+            child: Center(
+              child: icon != null
+                  ? Icon(icon, size: 13, color: foreground)
+                  : Text(
+                      label!,
+                      style: TextStyle(
+                        fontSize: 10,
+                        fontWeight: FontWeight.w600,
+                        color: foreground,
+                      ),
+                    ),
+            ),
+          ),
+        ),
+      ),
     );
   }
 }
-
-enum _StaffStatus { active, onLeave }
-
-class _StaffMember {
-  const _StaffMember({
-    required this.name,
-    required this.employeeId,
-    required this.department,
-    required this.role,
-    required this.email,
-    required this.phone,
-    required this.status,
-    required this.avatarColor,
-  });
-
-  final String name;
-  final String employeeId;
-  final String department;
-  final String role;
-  final String email;
-  final String phone;
-  final _StaffStatus status;
-  final Color avatarColor;
-
-  String get initials {
-    final parts = name
-        .replaceAll('.', '')
-        .split(' ')
-        .where((part) => part != 'Dr' && part != 'Prof' && part.isNotEmpty)
-        .take(2);
-
-    return parts.map((part) => part[0]).join().toUpperCase();
-  }
-}
-
-const _members = <_StaffMember>[
-  _StaffMember(
-    name: 'Dr. Rajeshwari Sengupta',
-    employeeId: 'EMP-CS-041',
-    department: 'Computer Science & Eng',
-    role: 'Professor & Head of Dept',
-    email: 'r.sengupta@campus.edu',
-    phone: '+1 (555) 234-8801',
-    status: _StaffStatus.active,
-    avatarColor: AppColors.avatarBlue,
-  ),
-  _StaffMember(
-    name: 'Prof. Marcus Thorne',
-    employeeId: 'EMP-CS-112',
-    department: 'Computer Science & Eng',
-    role: 'Associate Professor',
-    email: 'm.thorne@campus.edu',
-    phone: '+1 (555) 489-1029',
-    status: _StaffStatus.active,
-    avatarColor: AppColors.avatarViolet,
-  ),
-  _StaffMember(
-    name: 'Dr. Elena Rostova',
-    employeeId: 'EMP-CS-204',
-    department: 'Computer Science & Eng',
-    role: 'Assistant Professor',
-    email: 'e.rostova@campus.edu',
-    phone: '+1 (555) 762-3804',
-    status: _StaffStatus.active,
-    avatarColor: AppColors.avatarEmerald,
-  ),
-  _StaffMember(
-    name: 'David K. Chen',
-    employeeId: 'EMP-CS-155',
-    department: 'Computer Science & Eng',
-    role: 'Senior Lab Instructor',
-    email: 'd.chen@campus.edu',
-    phone: '+1 (555) 881-9923',
-    status: _StaffStatus.onLeave,
-    avatarColor: AppColors.avatarOrange,
-  ),
-  _StaffMember(
-    name: 'Dr. Amara Okafor',
-    employeeId: 'EMP-CS-068',
-    department: 'Computer Science & Eng',
-    role: 'Associate Professor',
-    email: 'a.okafor@campus.edu',
-    phone: '+1 (555) 672-9045',
-    status: _StaffStatus.active,
-    avatarColor: AppColors.avatarPink,
-  ),
-];

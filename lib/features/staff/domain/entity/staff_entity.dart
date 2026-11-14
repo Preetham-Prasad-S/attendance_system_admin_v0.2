@@ -20,24 +20,24 @@ class StaffEntity {
   final int? phoneNo;
 
   factory StaffEntity.fromModel(StaffModel model) => StaffEntity(
-        id: model.id,
-        name: model.name,
-        email: model.email,
-        staffId: model.staffId,
-        department: model.department,
-        position: model.position,
-        phoneNo: model.phoneNo,
-      );
+    id: model.id,
+    name: model.name,
+    email: model.email,
+    staffId: model.staffId,
+    department: model.department,
+    position: model.position,
+    phoneNo: model.phoneNo,
+  );
 
   StaffModel toModel() => StaffModel(
-        id: id,
-        name: name,
-        email: email,
-        staffId: staffId,
-        department: department,
-        position: position,
-        phoneNo: phoneNo,
-      );
+    id: id,
+    name: name,
+    email: email,
+    staffId: staffId,
+    department: department,
+    position: position,
+    phoneNo: phoneNo,
+  );
 
   @override
   String toString() {
@@ -60,5 +60,11 @@ class StaffEntity {
 
   @override
   int get hashCode =>
-      id.hashCode ^ name.hashCode ^ email.hashCode ^ staffId.hashCode ^ department.hashCode ^ position.hashCode ^ phoneNo.hashCode;
+      id.hashCode ^
+      name.hashCode ^
+      email.hashCode ^
+      staffId.hashCode ^
+      department.hashCode ^
+      position.hashCode ^
+      phoneNo.hashCode;
 }

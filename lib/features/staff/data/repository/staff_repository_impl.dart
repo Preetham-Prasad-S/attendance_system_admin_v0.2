@@ -14,7 +14,9 @@ class StaffRepositoryImpl implements StaffRepository {
   Future<Either<AppFailure, List<StaffEntity>>> getStaff() async {
     try {
       final result = await remoteDataSource.getStaff();
-      return Right(result.map((model) => StaffEntity.fromModel(model)).toList());
+      return Right(
+        result.map((model) => StaffEntity.fromModel(model)).toList(),
+      );
     } catch (error) {
       return Left(AppAuthFailure(message: error.toString()));
     }

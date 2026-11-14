@@ -18,7 +18,9 @@ class StaffRemoteDataSourceImpl implements StaffRemoteDataSource {
         return [];
       }
 
-      return (response as List).map((json) => StaffModel.fromJson(json as Map<String, dynamic>)).toList();
+      return (response as List)
+          .map((json) => StaffModel.fromJson(json as Map<String, dynamic>))
+          .toList();
     } catch (error) {
       throw AppAuthException(message: error.toString());
     }
@@ -27,9 +29,13 @@ class StaffRemoteDataSourceImpl implements StaffRemoteDataSource {
   @override
   Future<StaffModel> getStaffById(int id) async {
     try {
-      final response = await client.from('staff').select().eq('id', id).single();
+      final response = await client
+          .from('staff')
+          .select()
+          .eq('id', id)
+          .single();
 
-      return StaffModel.fromJson(response as Map<String, dynamic>);
+      return StaffModel.fromJson(response);
     } catch (error) {
       throw AppAuthException(message: error.toString());
     }
@@ -38,10 +44,13 @@ class StaffRemoteDataSourceImpl implements StaffRemoteDataSource {
   @override
   Future<StaffModel> createStaff(StaffModel staff) async {
     try {
-      final response = await client.from('staff').insert(staff.toJson()).select();
+      final response = await client
+          .from('staff')
+          .insert(staff.toInsertJson())
+          .select();
 
       if (response.isNotEmpty) {
-        return StaffModel.fromJson(response.first as Map<String, dynamic>);
+        return StaffModel.fromJson(response.first);
       }
 
       throw const AppAuthException(message: 'Failed to create staff');
@@ -53,10 +62,14 @@ class StaffRemoteDataSourceImpl implements StaffRemoteDataSource {
   @override
   Future<StaffModel> updateStaff(StaffModel staff) async {
     try {
-      final response = await client.from('staff').update(staff.toJson()).eq('id', staff.id).select();
+      final response = await client
+          .from('staff')
+          .update(staff.toJson())
+          .eq('id', staff.id)
+          .select();
 
       if (response.isNotEmpty) {
-        return StaffModel.fromJson(response.first as Map<String, dynamic>);
+        return StaffModel.fromJson(response.first);
       }
 
       throw const AppAuthException(message: 'Failed to update staff');
