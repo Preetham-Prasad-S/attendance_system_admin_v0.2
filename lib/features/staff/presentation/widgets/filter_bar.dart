@@ -1,19 +1,26 @@
 import 'package:flutter/material.dart';
 
 import '../../../../core/theme/app_colors.dart';
-import '../models/staff_member.dart';
 
 class FilterBar extends StatefulWidget {
   const FilterBar({
     super.key,
-    this.departmentOptions = const [allDepartmentsLabel],
+    required this.searchQuery,
+    required this.department,
+    required this.status,
+    required this.departmentOptions,
+    required this.statusOptions,
     this.onSearchChanged,
     this.onDepartmentChanged,
     this.onStatusChanged,
     this.totalRecords,
   });
 
+  final String searchQuery;
+  final String department;
+  final String status;
   final List<String> departmentOptions;
+  final List<String> statusOptions;
   final ValueChanged<String>? onSearchChanged;
   final ValueChanged<String>? onDepartmentChanged;
   final ValueChanged<String>? onStatusChanged;
@@ -24,14 +31,25 @@ class FilterBar extends StatefulWidget {
 }
 
 class _FilterBarState extends State<FilterBar> {
-  final _searchController = TextEditingController();
-  String _department = allDepartmentsLabel;
-  String _status = allStatusesLabel;
+  late final TextEditingController _searchController;
 
   @override
   void initState() {
     super.initState();
+    _searchController = TextEditingController(text: widget.searchQuery);
     _searchController.addListener(_handleSearchTextChanged);
+  }
+
+  @override
+  void didUpdateWidget(covariant FilterBar oldWidget) {
+    super.didUpdateWidget(oldWidget);
+
+    if (widget.searchQuery != _searchController.text) {
+      _searchController.value = TextEditingValue(
+        text: widget.searchQuery,
+        selection: TextSelection.collapsed(offset: widget.searchQuery.length),
+      );
+    }
   }
 
   void _handleSearchTextChanged() => setState(() {});
@@ -44,12 +62,10 @@ class _FilterBarState extends State<FilterBar> {
   }
 
   void _handleDepartmentSelected(String value) {
-    setState(() => _department = value);
     widget.onDepartmentChanged?.call(value);
   }
 
   void _handleStatusSelected(String value) {
-    setState(() => _status = value);
     widget.onStatusChanged?.call(value);
   }
 
@@ -74,7 +90,7 @@ class _FilterBarState extends State<FilterBar> {
                 children: [
                   Expanded(
                     child: _FilterDropdown(
-                      label: _department,
+                      label: widget.department,
                       options: widget.departmentOptions,
                       onSelected: _handleDepartmentSelected,
                     ),
@@ -82,8 +98,8 @@ class _FilterBarState extends State<FilterBar> {
                   const SizedBox(width: 10),
                   Expanded(
                     child: _FilterDropdown(
-                      label: _status,
-                      options: staffStatusOptions,
+                      label: widget.status,
+                      options: widget.statusOptions,
                       onSelected: _handleStatusSelected,
                     ),
                   ),
@@ -105,7 +121,7 @@ class _FilterBarState extends State<FilterBar> {
             SizedBox(
               width: 160,
               child: _FilterDropdown(
-                label: _department,
+                label: widget.department,
                 options: widget.departmentOptions,
                 onSelected: _handleDepartmentSelected,
               ),
@@ -114,8 +130,8 @@ class _FilterBarState extends State<FilterBar> {
             SizedBox(
               width: 104,
               child: _FilterDropdown(
-                label: _status,
-                options: staffStatusOptions,
+                label: widget.status,
+                options: widget.statusOptions,
                 onSelected: _handleStatusSelected,
               ),
             ),

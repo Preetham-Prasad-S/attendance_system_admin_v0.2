@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:uuid/uuid.dart';
 
 import '../../../../../core/dependency_injection.dart';
 import '../../../../../core/theme/app_colors.dart';
@@ -18,6 +19,8 @@ class AddFacultyForm extends ConsumerStatefulWidget {
 }
 
 class _AddFacultyFormState extends ConsumerState<AddFacultyForm> {
+  static const _uuid = Uuid();
+
   final _formKey = GlobalKey<FormState>();
   final _fullNameController = TextEditingController();
   final _employeeIdController = TextEditingController();
@@ -26,6 +29,7 @@ class _AddFacultyFormState extends ConsumerState<AddFacultyForm> {
 
   String _department = AddFacultyOptions.departments.first;
   String _designation = AddFacultyOptions.designations[1];
+  bool _isActive = true;
 
   bool _isSaving = false;
   String? _errorMessage;
@@ -51,6 +55,10 @@ class _AddFacultyFormState extends ConsumerState<AddFacultyForm> {
     setState(() => _designation = value);
   }
 
+  void _handleStatusChanged(bool value) {
+    setState(() => _isActive = value);
+  }
+
   void _handleCancel() {
     widget.onDismiss();
   }
@@ -65,18 +73,18 @@ class _AddFacultyFormState extends ConsumerState<AddFacultyForm> {
     });
 
     final staff = StaffEntity(
-      // The record id is assigned by the database, so this placeholder is
-      // never included in the insert payload.
-      id: 0,
+      // Staff ids are generated client-side as UUID v7 values.
+      id: _uuid.v7(),
       name: _fullNameController.text.trim(),
       email: _emailController.text.trim(),
       staffId: _employeeIdController.text.trim(),
       department: _department,
       position: _designation,
+      status: _isActive,
       phoneNo: _parsePhone(_contactController.text),
     );
 
-    final container = ProviderScope.containerOf(context, listen: false);
+    final staffController = ref.read(staffControllerProvider.notifier);
     final result = await ref.read(createStaffUseCaseProvider)(staff);
 
     result.fold(
@@ -89,7 +97,7 @@ class _AddFacultyFormState extends ConsumerState<AddFacultyForm> {
         });
       },
       (_) {
-        container.invalidate(staffListProvider);
+        staffController.refreshStaff();
 
         if (mounted) {
           widget.onDismiss();
@@ -166,8 +174,10 @@ class _AddFacultyFormState extends ConsumerState<AddFacultyForm> {
                     contactController: _contactController,
                     department: _department,
                     designation: _designation,
+                    isActive: _isActive,
                     onDepartmentChanged: _handleDepartmentChanged,
                     onDesignationChanged: _handleDesignationChanged,
+                    onStatusChanged: _handleStatusChanged,
                     fullNameValidator: _validateFullName,
                     employeeIdValidator: _validateEmployeeId,
                     emailValidator: _validateEmail,

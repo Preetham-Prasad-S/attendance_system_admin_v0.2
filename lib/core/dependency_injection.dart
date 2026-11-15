@@ -1,9 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' as supabase;
 
-import 'error/app_exception.dart';
-import 'usecase/no_params.dart';
-
 import '../features/auth/data/datasource/auth_remote_data_source.dart';
 import '../features/auth/data/datasource/auth_remote_data_source_impl.dart';
 import '../features/auth/data/repository/auth_repository_impl.dart';
@@ -14,13 +11,14 @@ import '../features/auth/presentation/controller/auth_state.dart';
 
 import '../features/staff/data/datasource/staff_remote_data_source_impl.dart';
 import '../features/staff/data/repository/staff_repository_impl.dart';
-import '../features/staff/domain/entity/staff_entity.dart';
 import '../features/staff/domain/repository/staff_repository.dart';
 import '../features/staff/domain/usecases/create_staff_usecase.dart';
 import '../features/staff/domain/usecases/delete_staff_usecase.dart';
 import '../features/staff/domain/usecases/get_staff_usecase.dart';
 import '../features/staff/domain/usecases/get_staff_by_id_usecase.dart';
 import '../features/staff/domain/usecases/update_staff_usecase.dart';
+import '../features/staff/presentation/controller/staff_controller.dart';
+import '../features/staff/presentation/controller/staff_state.dart';
 
 final authStateChangesProvider = StreamProvider<supabase.AuthState>((
   ref,
@@ -80,11 +78,11 @@ final deleteStaffUseCaseProvider = Provider<DeleteStaffUseCase>((ref) {
   return DeleteStaffUseCase(repository: ref.watch(staffRepositoryProvider));
 });
 
-final staffListProvider = FutureProvider<List<StaffEntity>>((ref) async {
-  final result = await ref.watch(getStaffUseCaseProvider)(const NoParams());
-
-  return result.fold(
-    (failure) => throw AppUnknownException(message: failure.toString()),
-    (staff) => staff,
-  );
-});
+final staffControllerProvider =
+    AsyncNotifierProvider<StaffController, StaffState>(() {
+      return StaffController(
+        getStaffUseCaseProvider: getStaffUseCaseProvider,
+        updateStaffUseCaseProvider: updateStaffUseCaseProvider,
+        deleteStaffUseCaseProvider: deleteStaffUseCaseProvider,
+      );
+    });

@@ -3,58 +3,20 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/dependency_injection.dart';
 import '../../../../core/theme/app_colors.dart';
-import '../../domain/entity/staff_entity.dart';
-import '../models/staff_member.dart';
+import '../controller/staff_state.dart';
 import '../widgets/add_faculty_dialog/add_faculty_dialog.dart';
 import '../widgets/faculty_table.dart';
 import '../widgets/filter_bar.dart';
 import '../widgets/page_header.dart';
 
-class StaffScreen extends ConsumerStatefulWidget {
+class StaffScreen extends ConsumerWidget {
   const StaffScreen({super.key});
 
   @override
-  ConsumerState<StaffScreen> createState() => _StaffScreenState();
-}
-
-class _StaffScreenState extends ConsumerState<StaffScreen> {
-  String _searchQuery = '';
-  String _department = allDepartmentsLabel;
-  String _status = allStatusesLabel;
-
-  void _handleAddFaculty(BuildContext context) {
-    showAddFacultyDialog(context);
-  }
-
-  void _handleSearchChanged(String query) {
-    setState(() => _searchQuery = query);
-  }
-
-  void _handleDepartmentChanged(String department) {
-    setState(() => _department = department);
-  }
-
-  void _handleStatusChanged(String status) {
-    setState(() => _status = status);
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final staffAsync = ref.watch(staffListProvider);
-    final entities = staffAsync.valueOrNull ?? const <StaffEntity>[];
-    final allMembers = <StaffMember>[
-      for (var index = 0; index < entities.length; index++)
-        StaffMember.fromEntity(
-          entities[index],
-          avatarColor: staffAvatarPalette[index % staffAvatarPalette.length],
-        ),
-    ];
-    final visibleMembers = filterStaffMembers(
-      allMembers,
-      query: _searchQuery,
-      department: _department,
-      status: _status,
-    );
+  Widget build(BuildContext context, WidgetRef ref) {
+    final staffAsync = ref.watch(staffControllerProvider);
+    final controller = ref.read(staffControllerProvider.notifier);
+    final staffState = staffAsync.valueOrNull;
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(0, 12, 12, 12),
@@ -76,28 +38,34 @@ class _StaffScreenState extends ConsumerState<StaffScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              PageHeader(onAddFaculty: () => _handleAddFaculty(context)),
+              PageHeader(onAddFaculty: () => showAddFacultyDialog(context)),
               const SizedBox(height: 22),
               FilterBar(
-                departmentOptions: staffDepartmentOptionsFor(allMembers),
-                onSearchChanged: _handleSearchChanged,
-                onDepartmentChanged: _handleDepartmentChanged,
-                onStatusChanged: _handleStatusChanged,
-                totalRecords: visibleMembers.length,
+                searchQuery: staffState?.searchQuery ?? '',
+                department: staffState?.department ?? allDepartmentsLabel,
+                status: staffState?.status ?? allStatusesLabel,
+                departmentOptions:
+                    staffState?.departmentOptions ??
+                    const [allDepartmentsLabel],
+                statusOptions: staffStatusOptions,
+                onSearchChanged: controller.updateSearchQuery,
+                onDepartmentChanged: controller.updateDepartment,
+                onStatusChanged: controller.updateStatus,
+                totalRecords: staffState?.visibleMembers.length ?? 0,
               ),
               const SizedBox(height: 18),
               staffAsync.when(
-                data: (staff) {
-                  if (staff.isEmpty) {
+                data: (data) {
+                  if (data.members.isEmpty) {
                     return const _NoStaffCreated();
                   }
 
-                  return FacultyTable(members: visibleMembers);
+                  return FacultyTable(members: data.visibleMembers);
                 },
                 loading: () => const _StaffLoading(),
                 error: (error, _) => _StaffLoadError(
                   message: error.toString(),
-                  onRetry: () => ref.invalidate(staffListProvider),
+                  onRetry: controller.refreshStaff,
                 ),
               ),
             ],

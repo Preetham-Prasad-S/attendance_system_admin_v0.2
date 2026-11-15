@@ -8,15 +8,17 @@ class StaffEntity {
     required this.staffId,
     required this.department,
     required this.position,
+    required this.status,
     this.phoneNo,
   });
 
-  final int id;
+  final String id;
   final String name;
   final String email;
   final String staffId;
   final String department;
   final String position;
+  final bool status;
   final int? phoneNo;
 
   factory StaffEntity.fromModel(StaffModel model) => StaffEntity(
@@ -26,6 +28,7 @@ class StaffEntity {
     staffId: model.staffId,
     department: model.department,
     position: model.position,
+    status: model.status,
     phoneNo: model.phoneNo,
   );
 
@@ -36,12 +39,35 @@ class StaffEntity {
     staffId: staffId,
     department: department,
     position: position,
+    status: status,
     phoneNo: phoneNo,
   );
 
+  StaffEntity copyWith({
+    String? id,
+    String? name,
+    String? email,
+    String? staffId,
+    String? department,
+    String? position,
+    bool? status,
+    int? phoneNo,
+  }) {
+    return StaffEntity(
+      id: id ?? this.id,
+      name: name ?? this.name,
+      email: email ?? this.email,
+      staffId: staffId ?? this.staffId,
+      department: department ?? this.department,
+      position: position ?? this.position,
+      status: status ?? this.status,
+      phoneNo: phoneNo ?? this.phoneNo,
+    );
+  }
+
   @override
   String toString() {
-    return 'StaffEntity{id: $id, name: $name, email: $email, staffId: $staffId, department: $department, position: $position, phoneNo: $phoneNo}';
+    return 'StaffEntity{id: $id, name: $name, email: $email, staffId: $staffId, department: $department, position: $position, status: $status, phoneNo: $phoneNo}';
   }
 
   @override
@@ -55,6 +81,7 @@ class StaffEntity {
         other.staffId == staffId &&
         other.department == department &&
         other.position == position &&
+        other.status == status &&
         other.phoneNo == phoneNo;
   }
 
@@ -66,5 +93,6 @@ class StaffEntity {
       staffId.hashCode ^
       department.hashCode ^
       position.hashCode ^
+      status.hashCode ^
       phoneNo.hashCode;
 }

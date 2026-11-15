@@ -127,7 +127,10 @@ class _HeaderAction extends StatelessWidget {
     final shape = RoundedRectangleBorder(
       borderRadius: BorderRadius.circular(7),
     );
-    const textStyle = TextStyle(fontSize: 12.5, fontWeight: FontWeight.w600);
+    final textStyle = Theme.of(context).textTheme.labelLarge?.copyWith(
+      fontSize: 12.5,
+      fontWeight: FontWeight.w600,
+    );
 
     if (primary) {
       return FilledButton.icon(

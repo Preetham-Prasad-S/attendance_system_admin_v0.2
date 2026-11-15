@@ -1,12 +1,35 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/dependency_injection.dart';
 import '../../../../core/theme/app_colors.dart';
-import '../models/staff_member.dart';
+import '../../domain/entity/staff_entity.dart';
+import '../controller/staff_state.dart';
+
+const _avatarPalette = <Color>[
+  AppColors.avatarBlue,
+  AppColors.avatarViolet,
+  AppColors.avatarEmerald,
+  AppColors.avatarOrange,
+  AppColors.avatarPink,
+];
+
+enum _StaffRowAction { toggleStatus, delete }
+
+String _initialsFor(String name) {
+  final parts = name
+      .replaceAll('.', '')
+      .split(' ')
+      .where((part) => part != 'Dr' && part != 'Prof' && part.isNotEmpty)
+      .take(2);
+
+  return parts.map((part) => part[0]).join().toUpperCase();
+}
 
 class FacultyTable extends StatefulWidget {
   const FacultyTable({super.key, required this.members});
 
-  final List<StaffMember> members;
+  final List<StaffEntity> members;
 
   @override
   State<FacultyTable> createState() => _FacultyTableState();
@@ -184,8 +207,6 @@ class _TableHeader extends StatelessWidget {
       ),
       child: Row(
         children: [
-          const SizedBox(width: 30),
-          const SizedBox(width: 14),
           const Expanded(flex: 3, child: _HeaderLabel('FACULTY MEMBER')),
           const SizedBox(width: 14),
           const Expanded(flex: 3, child: _HeaderLabel('DEPARTMENT & ROLE')),
@@ -232,13 +253,13 @@ class _FacultyRow extends StatelessWidget {
     required this.showStatus,
   });
 
-  final StaffMember member;
+  final StaffEntity member;
   final bool showContact;
   final bool showStatus;
 
   @override
   Widget build(BuildContext context) {
-    final isActive = member.status == StaffStatus.active;
+    final isActive = member.status;
 
     return SizedBox(
       height: 66,
@@ -246,8 +267,6 @@ class _FacultyRow extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 14),
         child: Row(
           children: [
-            const SizedBox(width: 30, child: _SelectionBox()),
-            const SizedBox(width: 14),
             Expanded(flex: 3, child: _MemberCell(member: member)),
             const SizedBox(width: 14),
             Expanded(flex: 3, child: _DepartmentCell(member: member)),
@@ -262,19 +281,16 @@ class _FacultyRow extends StatelessWidget {
                 child: Align(
                   alignment: Alignment.centerLeft,
                   child: _StatusPill(
-                    label: isActive ? activeStatusLabel : onLeaveStatusLabel,
+                    label: isActive ? activeStatusLabel : inactiveStatusLabel,
                     active: isActive,
                   ),
                 ),
               ),
             ],
-            const SizedBox(
+            SizedBox(
               width: 36,
-              child: Icon(
-                Icons.more_vert_rounded,
-                size: 18,
-                color: AppColors.muted,
-              ),
+              height: 36,
+              child: _StaffActionsMenu(member: member),
             ),
           ],
         ),
@@ -283,21 +299,179 @@ class _FacultyRow extends StatelessWidget {
   }
 }
 
+class _StaffActionsMenu extends ConsumerWidget {
+  const _StaffActionsMenu({required this.member});
+
+  final StaffEntity member;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    return PopupMenuButton<_StaffRowAction>(
+      tooltip: 'Staff actions',
+      padding: EdgeInsets.zero,
+      icon: const Icon(Icons.more_vert_rounded),
+      iconSize: 18,
+      iconColor: AppColors.muted,
+      color: AppColors.white,
+      surfaceTintColor: Colors.transparent,
+      constraints: const BoxConstraints(minWidth: 190),
+      onSelected: (action) async {
+        switch (action) {
+          case _StaffRowAction.toggleStatus:
+            await _toggleStatus(context, ref);
+          case _StaffRowAction.delete:
+            await _deleteStaff(context, ref);
+        }
+      },
+      itemBuilder: (context) => [
+        PopupMenuItem<_StaffRowAction>(
+          value: _StaffRowAction.toggleStatus,
+          height: 38,
+          child: const _StaffMenuItem(
+            icon: Icons.swap_horiz_rounded,
+            label: 'Change status',
+          ),
+        ),
+        const PopupMenuDivider(height: 1),
+        const PopupMenuItem<_StaffRowAction>(
+          value: _StaffRowAction.delete,
+          height: 38,
+          child: _StaffMenuItem(
+            icon: Icons.delete_outline_rounded,
+            label: 'Delete staff member',
+            danger: true,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Future<void> _toggleStatus(BuildContext context, WidgetRef ref) async {
+    final messenger = ScaffoldMessenger.of(context);
+    final nextStatus = !member.status;
+
+    final failure = await ref
+        .read(staffControllerProvider.notifier)
+        .setStaffStatus(member, status: nextStatus);
+
+    if (failure != null) {
+      _showMessage(messenger, failure.toString(), isError: true);
+      return;
+    }
+
+    _showMessage(
+      messenger,
+      nextStatus
+          ? 'Staff member marked active.'
+          : 'Staff member marked inactive.',
+    );
+  }
+
+  Future<void> _deleteStaff(BuildContext context, WidgetRef ref) async {
+    final messenger = ScaffoldMessenger.of(context);
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          title: const Text('Delete staff member?'),
+          content: Text(
+            '${member.name} will be permanently removed. This action cannot be undone.',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(false),
+              child: const Text('Cancel'),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.of(dialogContext).pop(true),
+              style: FilledButton.styleFrom(
+                backgroundColor: AppColors.danger,
+                foregroundColor: AppColors.white,
+              ),
+              child: const Text('Delete'),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (confirmed != true || !context.mounted) return;
+
+    final failure = await ref
+        .read(staffControllerProvider.notifier)
+        .deleteStaff(member);
+
+    if (failure != null) {
+      _showMessage(messenger, failure.toString(), isError: true);
+      return;
+    }
+
+    _showMessage(messenger, 'Staff member deleted.');
+  }
+
+  void _showMessage(
+    ScaffoldMessengerState messenger,
+    String message, {
+    bool isError = false,
+  }) {
+    messenger
+      ..hideCurrentSnackBar()
+      ..showSnackBar(
+        SnackBar(
+          content: Text(message),
+          backgroundColor: isError ? AppColors.danger : AppColors.navy,
+        ),
+      );
+  }
+}
+
+class _StaffMenuItem extends StatelessWidget {
+  const _StaffMenuItem({
+    required this.icon,
+    required this.label,
+    this.danger = false,
+  });
+
+  final IconData icon;
+  final String label;
+  final bool danger;
+
+  @override
+  Widget build(BuildContext context) {
+    final color = danger ? AppColors.danger : AppColors.navy;
+
+    return Row(
+      children: [
+        Icon(icon, size: 16, color: color),
+        const SizedBox(width: 9),
+        Text(
+          label,
+          maxLines: 1,
+          style: TextStyle(
+            fontSize: 12,
+            fontWeight: FontWeight.w500,
+            color: color,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
 class _MemberCell extends StatelessWidget {
   const _MemberCell({required this.member});
 
-  final StaffMember member;
+  final StaffEntity member;
 
   @override
   Widget build(BuildContext context) {
     return Row(
       children: [
         _UserAvatar(
-          label: member.initials,
-          color: member.avatarColor,
-          statusColor: member.status == StaffStatus.active
-              ? AppColors.success
-              : AppColors.warning,
+          label: _initialsFor(member.name),
+          color: _avatarPalette[member.id.hashCode % _avatarPalette.length],
+          statusColor: member.status ? AppColors.success : AppColors.muted,
         ),
         const SizedBox(width: 10),
         Expanded(
@@ -317,7 +491,7 @@ class _MemberCell extends StatelessWidget {
               ),
               const SizedBox(height: 3),
               Text(
-                member.employeeId,
+                member.staffId,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: const TextStyle(
@@ -337,7 +511,7 @@ class _MemberCell extends StatelessWidget {
 class _DepartmentCell extends StatelessWidget {
   const _DepartmentCell({required this.member});
 
-  final StaffMember member;
+  final StaffEntity member;
 
   @override
   Widget build(BuildContext context) {
@@ -350,18 +524,18 @@ class _DepartmentCell extends StatelessWidget {
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
           style: const TextStyle(
-            fontSize: 11.5,
+            fontSize: 12.5,
             fontWeight: FontWeight.w600,
             color: AppColors.navy,
           ),
         ),
         const SizedBox(height: 3),
         Text(
-          member.role,
+          member.position,
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
           style: const TextStyle(
-            fontSize: 10,
+            fontSize: 11,
             fontWeight: FontWeight.w500,
             color: AppColors.muted,
           ),
@@ -374,7 +548,7 @@ class _DepartmentCell extends StatelessWidget {
 class _ContactCell extends StatelessWidget {
   const _ContactCell({required this.member});
 
-  final StaffMember member;
+  final StaffEntity member;
 
   @override
   Widget build(BuildContext context) {
@@ -390,7 +564,7 @@ class _ContactCell extends StatelessWidget {
         const SizedBox(height: 3),
         _ContactLine(
           icon: Icons.phone_outlined,
-          text: member.phone,
+          text: member.phoneNo?.toString() ?? '—',
           color: AppColors.muted,
         ),
       ],
@@ -421,7 +595,7 @@ class _ContactLine extends StatelessWidget {
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             style: TextStyle(
-              fontSize: 10.5,
+              fontSize: 11.5,
               fontWeight: FontWeight.w500,
               color: color,
             ),
@@ -440,8 +614,8 @@ class _StatusPill extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final foreground = active ? AppColors.success : AppColors.warning;
-    final background = active ? AppColors.successSoft : AppColors.warningSoft;
+    final foreground = active ? AppColors.success : AppColors.muted;
+    final background = active ? AppColors.successSoft : AppColors.canvas;
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
@@ -471,26 +645,6 @@ class _StatusPill extends StatelessWidget {
             ),
           ),
         ],
-      ),
-    );
-  }
-}
-
-class _SelectionBox extends StatelessWidget {
-  const _SelectionBox();
-
-  @override
-  Widget build(BuildContext context) {
-    return Align(
-      alignment: Alignment.centerLeft,
-      child: Container(
-        width: 16,
-        height: 16,
-        decoration: BoxDecoration(
-          color: AppColors.white,
-          border: Border.all(color: AppColors.border),
-          borderRadius: BorderRadius.circular(4),
-        ),
       ),
     );
   }

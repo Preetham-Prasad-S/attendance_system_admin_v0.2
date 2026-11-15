@@ -6,24 +6,27 @@ class StaffModel {
     required this.staffId,
     required this.department,
     required this.position,
+    required this.status,
     this.phoneNo,
   });
 
-  final int id;
+  final String id;
   final String name;
   final String email;
   final String staffId;
   final String department;
   final String position;
+  final bool status;
   final int? phoneNo;
 
   factory StaffModel.fromJson(Map<String, dynamic> json) => StaffModel(
-    id: json['id'] as int,
+    id: json['id'] as String,
     name: json['name'] as String,
     email: json['email'] as String,
     staffId: json['staff_id'] as String,
     department: json['department'] as String,
     position: json['position'] as String,
+    status: json['status'] as bool? ?? true,
     phoneNo: json['phone_no'] as int?,
   );
 
@@ -34,21 +37,13 @@ class StaffModel {
     'staff_id': staffId,
     'department': department,
     'position': position,
-    'phone_no': phoneNo,
-  };
-
-  Map<String, dynamic> toInsertJson() => {
-    'name': name,
-    'email': email,
-    'staff_id': staffId,
-    'department': department,
-    'position': position,
+    'status': status,
     'phone_no': phoneNo,
   };
 
   @override
   String toString() {
-    return 'StaffModel{id: $id, name: $name, email: $email, staffId: $staffId, department: $department, position: $position, phoneNo: $phoneNo}';
+    return 'StaffModel{id: $id, name: $name, email: $email, staffId: $staffId, department: $department, position: $position, status: $status, phoneNo: $phoneNo}';
   }
 
   @override
@@ -62,6 +57,7 @@ class StaffModel {
         other.staffId == staffId &&
         other.department == department &&
         other.position == position &&
+        other.status == status &&
         other.phoneNo == phoneNo;
   }
 
@@ -73,5 +69,6 @@ class StaffModel {
       staffId.hashCode ^
       department.hashCode ^
       position.hashCode ^
+      status.hashCode ^
       phoneNo.hashCode;
 }

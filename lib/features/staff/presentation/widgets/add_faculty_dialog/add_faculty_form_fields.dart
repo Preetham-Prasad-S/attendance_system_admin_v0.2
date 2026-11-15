@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../controller/staff_state.dart';
 import 'add_faculty_dropdown_field.dart';
 import 'add_faculty_field.dart';
 import 'add_faculty_form_grid.dart';
@@ -15,8 +16,10 @@ class AddFacultyFormFields extends StatelessWidget {
     required this.contactController,
     required this.department,
     required this.designation,
+    required this.isActive,
     required this.onDepartmentChanged,
     required this.onDesignationChanged,
+    required this.onStatusChanged,
     required this.fullNameValidator,
     required this.employeeIdValidator,
     required this.emailValidator,
@@ -29,8 +32,10 @@ class AddFacultyFormFields extends StatelessWidget {
   final TextEditingController contactController;
   final String department;
   final String designation;
+  final bool isActive;
   final ValueChanged<String?> onDepartmentChanged;
   final ValueChanged<String?> onDesignationChanged;
+  final ValueChanged<bool> onStatusChanged;
   final FormFieldValidator<String> fullNameValidator;
   final FormFieldValidator<String> employeeIdValidator;
   final FormFieldValidator<String> emailValidator;
@@ -99,6 +104,18 @@ class AddFacultyFormFields extends StatelessWidget {
             keyboardType: TextInputType.phone,
             textInputAction: TextInputAction.done,
             validator: contactValidator,
+          ),
+        ),
+        AddFacultyField(
+          label: 'Status',
+          child: AddFacultyDropdownField(
+            value: isActive ? activeStatusLabel : inactiveStatusLabel,
+            items: const [activeStatusLabel, inactiveStatusLabel],
+            onChanged: (value) {
+              if (value == null) return;
+
+              onStatusChanged(value == activeStatusLabel);
+            },
           ),
         ),
       ],

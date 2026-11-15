@@ -27,7 +27,7 @@ class StaffRemoteDataSourceImpl implements StaffRemoteDataSource {
   }
 
   @override
-  Future<StaffModel> getStaffById(int id) async {
+  Future<StaffModel> getStaffById(String id) async {
     try {
       final response = await client
           .from('staff')
@@ -46,7 +46,7 @@ class StaffRemoteDataSourceImpl implements StaffRemoteDataSource {
     try {
       final response = await client
           .from('staff')
-          .insert(staff.toInsertJson())
+          .insert(staff.toJson())
           .select();
 
       if (response.isNotEmpty) {
@@ -79,9 +79,17 @@ class StaffRemoteDataSourceImpl implements StaffRemoteDataSource {
   }
 
   @override
-  Future<void> deleteStaff(int id) async {
+  Future<void> deleteStaff(String id) async {
     try {
-      await client.from('staff').delete().eq('id', id);
+      final response = await client
+          .from('staff')
+          .delete()
+          .eq('id', id)
+          .select();
+
+      if (response.isEmpty) {
+        throw const AppAuthException(message: 'Failed to delete staff');
+      }
     } catch (error) {
       throw AppAuthException(message: error.toString());
     }

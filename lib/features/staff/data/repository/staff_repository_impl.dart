@@ -23,7 +23,7 @@ class StaffRepositoryImpl implements StaffRepository {
   }
 
   @override
-  Future<Either<AppFailure, StaffEntity>> getStaffById(int id) async {
+  Future<Either<AppFailure, StaffEntity>> getStaffById(String id) async {
     try {
       final result = await remoteDataSource.getStaffById(id);
       return Right(StaffEntity.fromModel(result));
@@ -53,7 +53,7 @@ class StaffRepositoryImpl implements StaffRepository {
   }
 
   @override
-  Future<Either<AppFailure, void>> deleteStaff(int id) async {
+  Future<Either<AppFailure, void>> deleteStaff(String id) async {
     try {
       await remoteDataSource.deleteStaff(id);
       return const Right(null);
