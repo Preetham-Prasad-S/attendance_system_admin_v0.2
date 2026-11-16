@@ -5,7 +5,7 @@ import '../../../../core/dependency_injection.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../controller/staff_state.dart';
 import '../widgets/add_faculty_dialog/add_faculty_dialog.dart';
-import '../widgets/faculty_table.dart';
+import '../widgets/faculty_table/faculty_table.dart';
 import '../widgets/filter_bar.dart';
 import '../widgets/page_header.dart';
 
