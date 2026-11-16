@@ -5,7 +5,9 @@ import '../features/auth/data/datasource/auth_remote_data_source.dart';
 import '../features/auth/data/datasource/auth_remote_data_source_impl.dart';
 import '../features/auth/data/repository/auth_repository_impl.dart';
 import '../features/auth/domain/repository/auth_repository.dart';
+import '../features/auth/domain/usecases/get_user_authorization_usecase.dart';
 import '../features/auth/domain/usecases/login_usecase.dart';
+import '../features/auth/domain/usecases/sign_out_usecase.dart';
 import '../features/auth/presentation/controller/auth_controller.dart';
 import '../features/auth/presentation/controller/auth_state.dart';
 
@@ -13,6 +15,7 @@ import '../features/staff/data/datasource/staff_remote_data_source_impl.dart';
 import '../features/staff/data/repository/staff_repository_impl.dart';
 import '../features/staff/domain/repository/staff_repository.dart';
 import '../features/staff/domain/usecases/create_staff_usecase.dart';
+import '../features/staff/domain/usecases/create_staff_with_authorization_usecase.dart';
 import '../features/staff/domain/usecases/delete_staff_usecase.dart';
 import '../features/staff/domain/usecases/get_staff_usecase.dart';
 import '../features/staff/domain/usecases/get_staff_by_id_usecase.dart';
@@ -46,6 +49,17 @@ final loginUseCaseProvider = Provider<LoginUseCase>((ref) {
   return LoginUseCase(repository: ref.watch(authRepositoryProvider));
 });
 
+final getUserAuthorizationUseCaseProvider =
+    Provider<GetUserAuthorizationUseCase>((ref) {
+      return GetUserAuthorizationUseCase(
+        repository: ref.watch(authRepositoryProvider),
+      );
+    });
+
+final signOutUseCaseProvider = Provider<SignOutUseCase>((ref) {
+  return SignOutUseCase(repository: ref.watch(authRepositoryProvider));
+});
+
 final authControllerProvider = NotifierProvider<AuthController, AuthState>(() {
   return AuthController(loginUseCaseProvider: loginUseCaseProvider);
 });
@@ -69,6 +83,14 @@ final getStaffByIdUseCaseProvider = Provider<GetStaffByIdUseCase>((ref) {
 final createStaffUseCaseProvider = Provider<CreateStaffUseCase>((ref) {
   return CreateStaffUseCase(repository: ref.watch(staffRepositoryProvider));
 });
+
+final createStaffWithAuthorizationUseCaseProvider =
+    Provider<CreateStaffWithAuthorizationUseCase>((ref) {
+      return CreateStaffWithAuthorizationUseCase(
+        staffRepository: ref.watch(staffRepositoryProvider),
+        authRepository: ref.watch(authRepositoryProvider),
+      );
+    });
 
 final updateStaffUseCaseProvider = Provider<UpdateStaffUseCase>((ref) {
   return UpdateStaffUseCase(repository: ref.watch(staffRepositoryProvider));

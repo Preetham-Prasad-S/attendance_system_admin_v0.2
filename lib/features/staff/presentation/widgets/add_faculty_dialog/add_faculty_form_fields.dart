@@ -17,9 +17,11 @@ class AddFacultyFormFields extends StatelessWidget {
     required this.department,
     required this.designation,
     required this.isActive,
+    required this.authorityLevel,
     required this.onDepartmentChanged,
     required this.onDesignationChanged,
     required this.onStatusChanged,
+    required this.onAuthorityLevelChanged,
     required this.fullNameValidator,
     required this.employeeIdValidator,
     required this.emailValidator,
@@ -33,9 +35,11 @@ class AddFacultyFormFields extends StatelessWidget {
   final String department;
   final String designation;
   final bool isActive;
+  final String authorityLevel;
   final ValueChanged<String?> onDepartmentChanged;
   final ValueChanged<String?> onDesignationChanged;
   final ValueChanged<bool> onStatusChanged;
+  final ValueChanged<String?> onAuthorityLevelChanged;
   final FormFieldValidator<String> fullNameValidator;
   final FormFieldValidator<String> employeeIdValidator;
   final FormFieldValidator<String> emailValidator;
@@ -116,6 +120,14 @@ class AddFacultyFormFields extends StatelessWidget {
 
               onStatusChanged(value == activeStatusLabel);
             },
+          ),
+        ),
+        AddFacultyField(
+          label: 'Authorization level',
+          child: AddFacultyDropdownField(
+            value: authorityLevel,
+            items: AddFacultyOptions.authorizationLevels,
+            onChanged: onAuthorityLevelChanged,
           ),
         ),
       ],

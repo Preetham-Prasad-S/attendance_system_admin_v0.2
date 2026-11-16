@@ -16,4 +16,6 @@ class AddFacultyOptions {
     'Senior Lab Instructor',
     'Lecturer',
   ];
+
+  static const List<String> authorizationLevels = <String>['Admin', 'Staff'];
 }

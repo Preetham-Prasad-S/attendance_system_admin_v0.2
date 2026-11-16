@@ -5,6 +5,7 @@ import 'package:uuid/uuid.dart';
 import '../../../../../core/dependency_injection.dart';
 import '../../../../../core/theme/app_colors.dart';
 import '../../../domain/entity/staff_entity.dart';
+import '../../../domain/usecases/create_staff_with_authorization_usecase.dart';
 import 'add_faculty_dialog_actions.dart';
 import 'add_faculty_form_fields.dart';
 import 'add_faculty_options.dart';
@@ -30,9 +31,13 @@ class _AddFacultyFormState extends ConsumerState<AddFacultyForm> {
   String _department = AddFacultyOptions.departments.first;
   String _designation = AddFacultyOptions.designations[1];
   bool _isActive = true;
+  String _authorityLevel = 'staff';
 
   bool _isSaving = false;
   String? _errorMessage;
+
+  String get _authorityLevelLabel =>
+      _authorityLevel == 'admin' ? 'Admin' : 'Staff';
 
   @override
   void dispose() {
@@ -57,6 +62,12 @@ class _AddFacultyFormState extends ConsumerState<AddFacultyForm> {
 
   void _handleStatusChanged(bool value) {
     setState(() => _isActive = value);
+  }
+
+  void _handleAuthorityLevelChanged(String? value) {
+    if (value == null) return;
+
+    setState(() => _authorityLevel = value == 'Admin' ? 'admin' : 'staff');
   }
 
   void _handleCancel() {
@@ -85,7 +96,12 @@ class _AddFacultyFormState extends ConsumerState<AddFacultyForm> {
     );
 
     final staffController = ref.read(staffControllerProvider.notifier);
-    final result = await ref.read(createStaffUseCaseProvider)(staff);
+    final result = await ref.read(createStaffWithAuthorizationUseCaseProvider)(
+      CreateStaffWithAuthorizationParams(
+        staff: staff,
+        authorityLevel: _authorityLevel,
+      ),
+    );
 
     result.fold(
       (failure) {
@@ -175,9 +191,11 @@ class _AddFacultyFormState extends ConsumerState<AddFacultyForm> {
                     department: _department,
                     designation: _designation,
                     isActive: _isActive,
+                    authorityLevel: _authorityLevelLabel,
                     onDepartmentChanged: _handleDepartmentChanged,
                     onDesignationChanged: _handleDesignationChanged,
                     onStatusChanged: _handleStatusChanged,
+                    onAuthorityLevelChanged: _handleAuthorityLevelChanged,
                     fullNameValidator: _validateFullName,
                     employeeIdValidator: _validateEmployeeId,
                     emailValidator: _validateEmail,
