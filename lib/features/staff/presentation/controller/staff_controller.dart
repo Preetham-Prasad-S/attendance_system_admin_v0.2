@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/error/app_exception.dart';
 import '../../../../core/error/app_failure.dart';
 import '../../../../core/usecase/no_params.dart';
+import '../../../auth/domain/usecases/get_staff_authorizations_usecase.dart';
 import '../../domain/entity/staff_entity.dart';
 import '../../domain/usecases/delete_staff_usecase.dart';
 import '../../domain/usecases/get_staff_usecase.dart';
@@ -12,22 +13,32 @@ import 'staff_state.dart';
 class StaffController extends AsyncNotifier<StaffState> {
   StaffController({
     required Provider<GetStaffUseCase> getStaffUseCaseProvider,
+    required Provider<GetStaffAuthorizationsUseCase>
+    getStaffAuthorizationsUseCaseProvider,
     required Provider<UpdateStaffUseCase> updateStaffUseCaseProvider,
     required Provider<DeleteStaffUseCase> deleteStaffUseCaseProvider,
   }) : _getStaffUseCaseProvider = getStaffUseCaseProvider,
+       _getStaffAuthorizationsUseCaseProvider =
+           getStaffAuthorizationsUseCaseProvider,
        _updateStaffUseCaseProvider = updateStaffUseCaseProvider,
        _deleteStaffUseCaseProvider = deleteStaffUseCaseProvider;
 
   final Provider<GetStaffUseCase> _getStaffUseCaseProvider;
+  final Provider<GetStaffAuthorizationsUseCase>
+  _getStaffAuthorizationsUseCaseProvider;
   final Provider<UpdateStaffUseCase> _updateStaffUseCaseProvider;
   final Provider<DeleteStaffUseCase> _deleteStaffUseCaseProvider;
 
   @override
   Future<StaffState> build() async {
     final useCase = ref.watch(_getStaffUseCaseProvider);
+    final authorizationsUseCase = ref.watch(
+      _getStaffAuthorizationsUseCaseProvider,
+    );
     final entities = await _fetchStaff(useCase);
+    final authorityLevels = await _fetchAuthorityLevels(authorizationsUseCase);
 
-    return StaffState(members: entities);
+    return StaffState(members: _withAuthorityLevels(entities, authorityLevels));
   }
 
   void updateSearchQuery(String query) {
@@ -50,12 +61,18 @@ class StaffController extends AsyncNotifier<StaffState> {
         : const AsyncLoading<StaffState>().copyWithPrevious(state);
 
     final useCase = ref.read(_getStaffUseCaseProvider);
+    final authorizationsUseCase = ref.read(
+      _getStaffAuthorizationsUseCaseProvider,
+    );
 
     state = await AsyncValue.guard(() async {
       final entities = await _fetchStaff(useCase);
+      final authorityLevels = await _fetchAuthorityLevels(
+        authorizationsUseCase,
+      );
 
       return StaffState(
-        members: entities,
+        members: _withAuthorityLevels(entities, authorityLevels),
         searchQuery: current?.searchQuery ?? '',
         department: current?.department ?? allDepartmentsLabel,
         status: current?.status ?? allStatusesLabel,
@@ -106,6 +123,34 @@ class StaffController extends AsyncNotifier<StaffState> {
       (failure) => throw AppUnknownException(message: failure.toString()),
       (staff) => staff,
     );
+  }
+
+  Future<Map<String, String?>> _fetchAuthorityLevels(
+    GetStaffAuthorizationsUseCase useCase,
+  ) async {
+    final result = await useCase(const NoParams());
+
+    // Authorization is supplementary; keep the directory usable if it fails.
+    return result.fold(
+      (_) => const <String, String?>{},
+      (authorizations) => {
+        for (final authorization in authorizations)
+          if (authorization.userStaffId != null)
+            authorization.userStaffId!: authorization.authorityLevel,
+      },
+    );
+  }
+
+  List<StaffEntity> _withAuthorityLevels(
+    List<StaffEntity> members,
+    Map<String, String?> authorityLevels,
+  ) {
+    return members
+        .map(
+          (member) =>
+              member.copyWith(authorityLevel: authorityLevels[member.id]),
+        )
+        .toList();
   }
 
   void _updateFilters({

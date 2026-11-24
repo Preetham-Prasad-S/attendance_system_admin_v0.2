@@ -25,6 +25,7 @@ class _AddFacultyFormState extends ConsumerState<AddFacultyForm> {
   final _formKey = GlobalKey<FormState>();
   final _fullNameController = TextEditingController();
   final _employeeIdController = TextEditingController();
+  final _instituteIdController = TextEditingController();
   final _emailController = TextEditingController();
   final _contactController = TextEditingController();
 
@@ -43,6 +44,7 @@ class _AddFacultyFormState extends ConsumerState<AddFacultyForm> {
   void dispose() {
     _fullNameController.dispose();
     _employeeIdController.dispose();
+    _instituteIdController.dispose();
     _emailController.dispose();
     _contactController.dispose();
     super.dispose();
@@ -89,6 +91,7 @@ class _AddFacultyFormState extends ConsumerState<AddFacultyForm> {
       name: _fullNameController.text.trim(),
       email: _emailController.text.trim(),
       staffId: _employeeIdController.text.trim(),
+      instituteId: _instituteIdController.text.trim(),
       department: _department,
       position: _designation,
       status: _isActive,
@@ -146,6 +149,14 @@ class _AddFacultyFormState extends ConsumerState<AddFacultyForm> {
     return null;
   }
 
+  String? _validateInstituteId(String? value) {
+    if (value == null || value.trim().isEmpty) {
+      return 'Institute ID is required.';
+    }
+
+    return null;
+  }
+
   String? _validateEmail(String? value) {
     final email = value?.trim() ?? '';
 
@@ -186,6 +197,7 @@ class _AddFacultyFormState extends ConsumerState<AddFacultyForm> {
                   AddFacultyFormFields(
                     fullNameController: _fullNameController,
                     employeeIdController: _employeeIdController,
+                    instituteIdController: _instituteIdController,
                     emailController: _emailController,
                     contactController: _contactController,
                     department: _department,
@@ -198,6 +210,7 @@ class _AddFacultyFormState extends ConsumerState<AddFacultyForm> {
                     onAuthorityLevelChanged: _handleAuthorityLevelChanged,
                     fullNameValidator: _validateFullName,
                     employeeIdValidator: _validateEmployeeId,
+                    instituteIdValidator: _validateInstituteId,
                     emailValidator: _validateEmail,
                     contactValidator: _validateContact,
                   ),

@@ -1,6 +1,6 @@
 {
-    "name": "attendance_system_admin",
-    "short_name": "attendance_system_admin",
+    "name": "CampusPluse",
+    "short_name": "CampusPluse",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",

@@ -7,10 +7,14 @@ class LoginButton extends StatelessWidget {
     super.key,
     required this.onPressed,
     required this.isLoading,
+    this.label = 'Sign In',
+    this.icon = Icons.login_rounded,
   });
 
   final VoidCallback onPressed;
   final bool isLoading;
+  final String label;
+  final IconData icon;
 
   @override
   Widget build(BuildContext context) {
@@ -34,14 +38,17 @@ class LoginButton extends StatelessWidget {
                   color: AppColors.white,
                 ),
               )
-            : const Row(
+            : Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.login_rounded, size: 20),
-                  SizedBox(width: 10),
+                  Icon(icon, size: 20),
+                  const SizedBox(width: 10),
                   Text(
-                    'Sign In',
-                    style: TextStyle(fontSize: 17, fontWeight: FontWeight.w700),
+                    label,
+                    style: const TextStyle(
+                      fontSize: 17,
+                      fontWeight: FontWeight.w700,
+                    ),
                   ),
                 ],
               ),

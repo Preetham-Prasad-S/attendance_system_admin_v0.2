@@ -33,6 +33,38 @@ class StaffRepositoryImpl implements StaffRepository {
   }
 
   @override
+  Future<Either<AppFailure, StaffEntity?>> getStaffByIdentifier(
+    String identifier,
+  ) async {
+    try {
+      final result = await remoteDataSource.getStaffByIdentifier(identifier);
+
+      if (result == null) return const Right(null);
+
+      return Right(StaffEntity.fromModel(result));
+    } catch (error) {
+      return Left(AppAuthFailure(message: error.toString()));
+    }
+  }
+
+  @override
+  Future<Either<AppFailure, StaffEntity>> linkUserToStaff({
+    required String staffId,
+    required String userId,
+  }) async {
+    try {
+      final result = await remoteDataSource.linkUserToStaff(
+        staffId: staffId,
+        userId: userId,
+      );
+
+      return Right(StaffEntity.fromModel(result));
+    } catch (error) {
+      return Left(AppAuthFailure(message: error.toString()));
+    }
+  }
+
+  @override
   Future<Either<AppFailure, StaffEntity>> createStaff(StaffEntity staff) async {
     try {
       final result = await remoteDataSource.createStaff(staff.toModel());

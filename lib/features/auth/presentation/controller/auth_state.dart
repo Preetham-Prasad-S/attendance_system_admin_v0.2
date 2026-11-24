@@ -30,3 +30,18 @@ final class AuthFailure extends AuthState {
 
   final String message;
 }
+
+final class AuthRegistrationRequired extends AuthState {
+  const AuthRegistrationRequired({
+    required this.email,
+    this.errorMessage,
+    this.isSubmitting = false,
+  });
+
+  final String email;
+  final String? errorMessage;
+  final bool isSubmitting;
+
+  @override
+  bool get isLoading => isSubmitting;
+}

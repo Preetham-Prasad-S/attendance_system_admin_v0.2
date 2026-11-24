@@ -12,6 +12,7 @@ class AddFacultyFormFields extends StatelessWidget {
     super.key,
     required this.fullNameController,
     required this.employeeIdController,
+    required this.instituteIdController,
     required this.emailController,
     required this.contactController,
     required this.department,
@@ -24,12 +25,14 @@ class AddFacultyFormFields extends StatelessWidget {
     required this.onAuthorityLevelChanged,
     required this.fullNameValidator,
     required this.employeeIdValidator,
+    required this.instituteIdValidator,
     required this.emailValidator,
     required this.contactValidator,
   });
 
   final TextEditingController fullNameController;
   final TextEditingController employeeIdController;
+  final TextEditingController instituteIdController;
   final TextEditingController emailController;
   final TextEditingController contactController;
   final String department;
@@ -42,6 +45,7 @@ class AddFacultyFormFields extends StatelessWidget {
   final ValueChanged<String?> onAuthorityLevelChanged;
   final FormFieldValidator<String> fullNameValidator;
   final FormFieldValidator<String> employeeIdValidator;
+  final FormFieldValidator<String> instituteIdValidator;
   final FormFieldValidator<String> emailValidator;
   final FormFieldValidator<String> contactValidator;
 
@@ -69,6 +73,17 @@ class AddFacultyFormFields extends StatelessWidget {
             textCapitalization: TextCapitalization.characters,
             textInputAction: TextInputAction.next,
             validator: employeeIdValidator,
+          ),
+        ),
+        AddFacultyField(
+          label: 'Institute ID',
+          isRequired: true,
+          child: AddFacultyTextField(
+            controller: instituteIdController,
+            hintText: 'e.g. INST-001',
+            textCapitalization: TextCapitalization.characters,
+            textInputAction: TextInputAction.next,
+            validator: instituteIdValidator,
           ),
         ),
         AddFacultyField(

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../../../core/theme/app_colors.dart';
 import '../../../domain/entity/staff_entity.dart';
+import 'faculty_authorization_tag.dart';
 import 'faculty_avatar.dart';
 
 const _avatarPalette = <Color>[
@@ -53,15 +54,25 @@ class FacultyMemberCell extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 3),
-              Text(
-                member.staffId,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: const TextStyle(
-                  fontSize: 10,
-                  fontWeight: FontWeight.w500,
-                  color: AppColors.muted,
-                ),
+              Wrap(
+                spacing: 6,
+                runSpacing: 3,
+                crossAxisAlignment: WrapCrossAlignment.center,
+                children: [
+                  Text(
+                    member.staffId,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w500,
+                      color: AppColors.muted,
+                    ),
+                  ),
+                  FacultyAuthorizationTag(
+                    authorityLevel: member.authorityLevel,
+                  ),
+                ],
               ),
             ],
           ),

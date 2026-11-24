@@ -42,6 +42,52 @@ class StaffRemoteDataSourceImpl implements StaffRemoteDataSource {
   }
 
   @override
+  Future<StaffModel?> getStaffByIdentifier(String identifier) async {
+    try {
+      final byEmail = await client
+          .from('staff')
+          .select()
+          .ilike('email', identifier)
+          .maybeSingle();
+
+      if (byEmail != null) {
+        return StaffModel.fromJson(byEmail);
+      }
+
+      final byStaffId = await client
+          .from('staff')
+          .select()
+          .ilike('staff_id', identifier)
+          .maybeSingle();
+
+      if (byStaffId == null) return null;
+
+      return StaffModel.fromJson(byStaffId);
+    } catch (error) {
+      throw AppAuthException(message: error.toString());
+    }
+  }
+
+  @override
+  Future<StaffModel> linkUserToStaff({
+    required String staffId,
+    required String userId,
+  }) async {
+    try {
+      final response = await client
+          .from('staff')
+          .update({'user_id': userId})
+          .eq('id', staffId)
+          .select()
+          .single();
+
+      return StaffModel.fromJson(response);
+    } catch (error) {
+      throw AppAuthException(message: error.toString());
+    }
+  }
+
+  @override
   Future<StaffModel> createStaff(StaffModel staff) async {
     try {
       final response = await client

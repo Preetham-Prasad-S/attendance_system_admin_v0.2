@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../features/auth/presentation/controller/admin_session_state.dart';
+import '../../features/auth/presentation/controller/auth_state.dart';
 import '../../features/auth/presentation/screens/login_screen.dart';
+import '../../features/auth/presentation/screens/register_user_screen.dart';
 import '../../features/auth/presentation/screens/splash_screen.dart';
 import '../../shared/screens/base_screen.dart';
 import '../dependency_injection.dart';
@@ -15,12 +17,21 @@ class AuthGate extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final session = ref.watch(authStateChangesProvider);
     final adminSession = ref.watch(adminSessionProvider);
+    final authState = ref.watch(authControllerProvider);
 
     return session.when(
       loading: () => const SplashScreen(),
       error: (error, _) => LoginScreen(errorMessage: error.toString()),
-      data: (authState) {
-        if (authState.session == null) {
+      data: (sessionState) {
+        if (sessionState.session == null) {
+          final registration = switch (authState) {
+            AuthRegistrationRequired() => authState,
+            _ => null,
+          };
+          if (registration != null) {
+            return RegisterUserScreen(email: registration.email);
+          }
+
           final message = switch (adminSession) {
             AdminSessionDenied(:final message) => message,
             AdminSessionSignedOut(:final message) => message,

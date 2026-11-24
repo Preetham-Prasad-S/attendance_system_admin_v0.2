@@ -8,6 +8,15 @@ abstract interface class AuthRemoteDataSource {
 
   Future<UserAuthorizationModel?> getUserAuthorization(String userId);
 
+  Future<UserAuthorizationModel?> getUserAuthorizationByStaffId(String staffId);
+
+  Future<UserAuthorizationModel> linkUserToAuthorization({
+    required String authorizationId,
+    required String userId,
+  });
+
+  Future<List<UserAuthorizationModel>> getStaffAuthorizations();
+
   Future<UserAuthorizationModel> createUserAuthorization(
     UserAuthorizationModel authorization,
   );

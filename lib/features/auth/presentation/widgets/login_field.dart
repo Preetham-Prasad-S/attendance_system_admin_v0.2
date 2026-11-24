@@ -8,6 +8,7 @@ class LoginField extends StatelessWidget {
     required this.hint,
     required this.icon,
     this.controller,
+    this.readOnly = false,
     this.obscureText = false,
     this.keyboardType,
     this.autofillHints,
@@ -19,6 +20,7 @@ class LoginField extends StatelessWidget {
   final String hint;
   final IconData icon;
   final TextEditingController? controller;
+  final bool readOnly;
   final bool obscureText;
   final TextInputType? keyboardType;
   final Iterable<String>? autofillHints;
@@ -35,6 +37,7 @@ class LoginField extends StatelessWidget {
 
     return TextFormField(
       controller: controller,
+      readOnly: readOnly,
       obscureText: obscureText,
       keyboardType: keyboardType,
       autofillHints: autofillHints,

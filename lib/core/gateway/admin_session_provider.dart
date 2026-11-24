@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../features/auth/presentation/controller/admin_session_state.dart';
+import '../../features/auth/presentation/controller/auth_state.dart';
 import '../dependency_injection.dart';
 import '../usecase/no_params.dart';
 
@@ -29,11 +30,35 @@ class AdminSessionController extends Notifier<AdminSessionState> {
       Future.microtask(() => _handleUserId(userId));
     }, fireImmediately: true);
 
+    ref.listen(authControllerProvider, (previous, next) {
+      final registrationCompleted =
+          previous is AuthRegistrationRequired && next is AuthSuccess;
+      if (!registrationCompleted) return;
+
+      final userId = ref
+          .read(authStateChangesProvider)
+          .valueOrNull
+          ?.session
+          ?.user
+          .id;
+      if (userId != null) {
+        Future.microtask(() => _handleUserId(userId));
+      }
+    });
+
     return const AdminSessionChecking();
   }
 
   Future<void> _handleUserId(String? userId) async {
     if (_disposed) return;
+
+    // Supabase emits a session as soon as signup succeeds, before the new user
+    // id has been linked to the authorization record. Do not treat that
+    // temporary state as a denied admin session.
+    if (userId != null &&
+        ref.read(authControllerProvider) is AuthRegistrationRequired) {
+      return;
+    }
 
     if (userId == null) {
       state = AdminSessionSignedOut(message: _lastDenialMessage);

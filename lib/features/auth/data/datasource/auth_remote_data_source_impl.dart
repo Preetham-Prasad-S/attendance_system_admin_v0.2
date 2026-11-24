@@ -28,6 +28,7 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
       return AuthUserModel(
         email: authUser.email ?? user.email,
         password: user.password,
+        id: authUser.id,
       );
     } on AuthException catch (error) {
       throw AppAuthException(message: error.message);
@@ -53,6 +54,7 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
       return AuthUserModel(
         email: authUser.email ?? user.email,
         password: user.password,
+        id: authUser.id,
       );
     } on AuthException catch (error) {
       throw AppAuthException(message: error.message);
@@ -73,6 +75,63 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
       if (response == null) return null;
 
       return UserAuthorizationModel.fromJson(response);
+    } catch (error) {
+      throw AppAuthException(message: error.toString());
+    }
+  }
+
+  @override
+  Future<UserAuthorizationModel?> getUserAuthorizationByStaffId(
+    String staffId,
+  ) async {
+    try {
+      final response = await client
+          .from('user_authorization')
+          .select()
+          .eq('user_staff_id', staffId)
+          .maybeSingle();
+
+      if (response == null) return null;
+
+      return UserAuthorizationModel.fromJson(response);
+    } catch (error) {
+      throw AppAuthException(message: error.toString());
+    }
+  }
+
+  @override
+  Future<UserAuthorizationModel> linkUserToAuthorization({
+    required String authorizationId,
+    required String userId,
+  }) async {
+    try {
+      final response = await client
+          .from('user_authorization')
+          .update({'user_id': userId})
+          .eq('id', authorizationId)
+          .select()
+          .single();
+
+      return UserAuthorizationModel.fromJson(response);
+    } catch (error) {
+      throw AppAuthException(message: error.toString());
+    }
+  }
+
+  @override
+  Future<List<UserAuthorizationModel>> getStaffAuthorizations() async {
+    try {
+      final response = await client
+          .from('user_authorization')
+          .select()
+          .not('user_staff_id', 'is', null);
+
+      return (response as List)
+          .map(
+            (json) =>
+                UserAuthorizationModel.fromJson(json as Map<String, dynamic>),
+          )
+          .toList();
     } catch (error) {
       throw AppAuthException(message: error.toString());
     }

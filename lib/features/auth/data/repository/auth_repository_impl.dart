@@ -23,6 +23,17 @@ class AuthRepositoryImpl implements AuthRepository {
   }
 
   @override
+  Future<Either<AppFailure, AuthUserEntity>> signup(AuthUserEntity user) async {
+    try {
+      final result = await remoteDataSource.signup(user.toModel());
+
+      return Right(AuthUserEntity.fromModel(result));
+    } catch (error) {
+      return Left(AppAuthFailure(message: error.toString()));
+    }
+  }
+
+  @override
   Future<Either<AppFailure, UserAuthorizationEntity?>> getUserAuthorization(
     String userId,
   ) async {
@@ -32,6 +43,51 @@ class AuthRepositoryImpl implements AuthRepository {
       if (result == null) return const Right(null);
 
       return Right(UserAuthorizationEntity.fromModel(result));
+    } catch (error) {
+      return Left(AppAuthFailure(message: error.toString()));
+    }
+  }
+
+  @override
+  Future<Either<AppFailure, UserAuthorizationEntity?>>
+  getUserAuthorizationByStaffId(String staffId) async {
+    try {
+      final result = await remoteDataSource.getUserAuthorizationByStaffId(
+        staffId,
+      );
+
+      if (result == null) return const Right(null);
+
+      return Right(UserAuthorizationEntity.fromModel(result));
+    } catch (error) {
+      return Left(AppAuthFailure(message: error.toString()));
+    }
+  }
+
+  @override
+  Future<Either<AppFailure, UserAuthorizationEntity>> linkUserToAuthorization({
+    required String authorizationId,
+    required String userId,
+  }) async {
+    try {
+      final result = await remoteDataSource.linkUserToAuthorization(
+        authorizationId: authorizationId,
+        userId: userId,
+      );
+
+      return Right(UserAuthorizationEntity.fromModel(result));
+    } catch (error) {
+      return Left(AppAuthFailure(message: error.toString()));
+    }
+  }
+
+  @override
+  Future<Either<AppFailure, List<UserAuthorizationEntity>>>
+  getStaffAuthorizations() async {
+    try {
+      final result = await remoteDataSource.getStaffAuthorizations();
+
+      return Right(result.map(UserAuthorizationEntity.fromModel).toList());
     } catch (error) {
       return Left(AppAuthFailure(message: error.toString()));
     }

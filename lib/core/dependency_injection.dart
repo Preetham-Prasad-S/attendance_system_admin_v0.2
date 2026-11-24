@@ -5,8 +5,11 @@ import '../features/auth/data/datasource/auth_remote_data_source.dart';
 import '../features/auth/data/datasource/auth_remote_data_source_impl.dart';
 import '../features/auth/data/repository/auth_repository_impl.dart';
 import '../features/auth/domain/repository/auth_repository.dart';
+import '../features/auth/domain/usecases/check_login_access_usecase.dart';
+import '../features/auth/domain/usecases/get_staff_authorizations_usecase.dart';
 import '../features/auth/domain/usecases/get_user_authorization_usecase.dart';
 import '../features/auth/domain/usecases/login_usecase.dart';
+import '../features/auth/domain/usecases/register_user_usecase.dart';
 import '../features/auth/domain/usecases/sign_out_usecase.dart';
 import '../features/auth/presentation/controller/auth_controller.dart';
 import '../features/auth/presentation/controller/auth_state.dart';
@@ -56,12 +59,39 @@ final getUserAuthorizationUseCaseProvider =
       );
     });
 
+final getStaffAuthorizationsUseCaseProvider =
+    Provider<GetStaffAuthorizationsUseCase>((ref) {
+      return GetStaffAuthorizationsUseCase(
+        repository: ref.watch(authRepositoryProvider),
+      );
+    });
+
 final signOutUseCaseProvider = Provider<SignOutUseCase>((ref) {
   return SignOutUseCase(repository: ref.watch(authRepositoryProvider));
 });
 
+final checkLoginAccessUseCaseProvider = Provider<CheckLoginAccessUseCase>((
+  ref,
+) {
+  return CheckLoginAccessUseCase(
+    authRepository: ref.watch(authRepositoryProvider),
+    staffRepository: ref.watch(staffRepositoryProvider),
+  );
+});
+
+final registerUserUseCaseProvider = Provider<RegisterUserUseCase>((ref) {
+  return RegisterUserUseCase(
+    authRepository: ref.watch(authRepositoryProvider),
+    staffRepository: ref.watch(staffRepositoryProvider),
+  );
+});
+
 final authControllerProvider = NotifierProvider<AuthController, AuthState>(() {
-  return AuthController(loginUseCaseProvider: loginUseCaseProvider);
+  return AuthController(
+    loginUseCaseProvider: loginUseCaseProvider,
+    checkLoginAccessUseCaseProvider: checkLoginAccessUseCaseProvider,
+    registerUserUseCaseProvider: registerUserUseCaseProvider,
+  );
 });
 
 final staffRepositoryProvider = Provider<StaffRepository>((ref) {
@@ -104,6 +134,8 @@ final staffControllerProvider =
     AsyncNotifierProvider<StaffController, StaffState>(() {
       return StaffController(
         getStaffUseCaseProvider: getStaffUseCaseProvider,
+        getStaffAuthorizationsUseCaseProvider:
+            getStaffAuthorizationsUseCaseProvider,
         updateStaffUseCaseProvider: updateStaffUseCaseProvider,
         deleteStaffUseCaseProvider: deleteStaffUseCaseProvider,
       );
