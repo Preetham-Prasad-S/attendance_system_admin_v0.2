@@ -26,11 +26,7 @@ class CheckLoginAccessUseCase extends Usecase<LoginAccess, String> {
 
     return staffResult.fold((failure) => Left(failure), (staff) async {
       if (staff == null) {
-        return const Right(
-          LoginDenied(
-            message: 'No staff account found for this email or staff ID.',
-          ),
-        );
+        return const Right(StaffNotFound());
       }
 
       final authorizationResult = await authRepository

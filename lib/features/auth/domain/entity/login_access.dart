@@ -27,3 +27,11 @@ final class LoginDenied extends LoginAccess {
 
   final String message;
 }
+
+/// Returned when the identifier is not present in the staff table.
+///
+/// Supabase-only admins can still be valid if their user id is linked in
+/// `user_authorization`, but that can only be verified after sign-in.
+final class StaffNotFound extends LoginAccess {
+  const StaffNotFound();
+}

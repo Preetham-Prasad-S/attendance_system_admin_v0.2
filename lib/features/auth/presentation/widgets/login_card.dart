@@ -11,11 +11,13 @@ class LoginCard extends StatefulWidget {
   const LoginCard({
     super.key,
     required this.onLogin,
+    required this.onRegister,
     required this.isLoading,
     required this.errorMessage,
   });
 
   final LoginCallback onLogin;
+  final VoidCallback onRegister;
   final bool isLoading;
   final String? errorMessage;
 
@@ -194,6 +196,14 @@ class _LoginCardState extends State<LoginCard> {
               const SizedBox(height: 12),
             ],
             LoginButton(onPressed: _handleSignIn, isLoading: widget.isLoading),
+            const SizedBox(height: 12),
+            LoginButton(
+              onPressed: widget.onRegister,
+              isLoading: false,
+              label: 'Register New Admin',
+              icon: Icons.person_add_alt_1_rounded,
+              outlined: true,
+            ),
           ],
         ),
       ),

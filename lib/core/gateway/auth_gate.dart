@@ -24,12 +24,13 @@ class AuthGate extends ConsumerWidget {
       error: (error, _) => LoginScreen(errorMessage: error.toString()),
       data: (sessionState) {
         if (sessionState.session == null) {
-          final registration = switch (authState) {
-            AuthRegistrationRequired() => authState,
+          final registrationEmail = switch (authState) {
+            AuthRegistrationStarted() => '',
+            AuthRegistrationRequired(:final email) => email,
             _ => null,
           };
-          if (registration != null) {
-            return RegisterUserScreen(email: registration.email);
+          if (registrationEmail != null) {
+            return RegisterUserScreen(email: registrationEmail);
           }
 
           final message = switch (adminSession) {

@@ -69,6 +69,7 @@ class LoginScreen extends ConsumerWidget {
                       password: password,
                     );
                   },
+                  onRegister: authController.startRegistration,
                   isLoading: authState.isLoading,
                   errorMessage: message,
                 ),

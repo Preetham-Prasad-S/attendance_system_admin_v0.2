@@ -8,7 +8,7 @@ import '../widgets/login_button.dart';
 import '../widgets/login_field.dart';
 
 class RegisterUserScreen extends ConsumerStatefulWidget {
-  const RegisterUserScreen({super.key, required this.email});
+  const RegisterUserScreen({super.key, this.email = ''});
 
   final String email;
 
@@ -31,11 +31,32 @@ class _RegisterUserScreenState extends ConsumerState<RegisterUserScreen> {
   }
 
   @override
+  void didUpdateWidget(covariant RegisterUserScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.email != oldWidget.email) {
+      _emailController.text = widget.email;
+    }
+  }
+
+  @override
   void dispose() {
     _emailController.dispose();
     _passwordController.dispose();
     _confirmPasswordController.dispose();
     super.dispose();
+  }
+
+  String? _validateEmail(String? value) {
+    final email = value?.trim() ?? '';
+
+    if (email.isEmpty) {
+      return 'Enter your institutional email';
+    }
+    if (!RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$').hasMatch(email)) {
+      return 'Enter a valid email address';
+    }
+
+    return null;
   }
 
   String? _validatePassword(String? value) {
@@ -58,6 +79,16 @@ class _RegisterUserScreenState extends ConsumerState<RegisterUserScreen> {
     return null;
   }
 
+  Future<void> _handleCheckEmail() async {
+    if (!(_formKey.currentState?.validate() ?? false)) return;
+
+    FocusScope.of(context).unfocus();
+
+    await ref
+        .read(authControllerProvider.notifier)
+        .checkRegistrationEmail(_emailController.text.trim());
+  }
+
   Future<void> _handleRegister() async {
     if (!(_formKey.currentState?.validate() ?? false)) return;
 
@@ -71,10 +102,25 @@ class _RegisterUserScreenState extends ConsumerState<RegisterUserScreen> {
   @override
   Widget build(BuildContext context) {
     final authState = ref.watch(authControllerProvider);
+    final isPasswordStep = authState is AuthRegistrationRequired;
+
     final errorMessage = switch (authState) {
+      AuthRegistrationStarted(:final errorMessage) => errorMessage,
       AuthRegistrationRequired(:final errorMessage) => errorMessage,
       _ => null,
     };
+    final isLoading = switch (authState) {
+      AuthRegistrationStarted(:final isCheckingEmail) => isCheckingEmail,
+      AuthRegistrationRequired(:final isSubmitting) => isSubmitting,
+      _ => false,
+    };
+
+    final title = isPasswordStep
+        ? 'Complete registration'
+        : 'Register new admin';
+    final description = isPasswordStep
+        ? 'Set a password to activate your admin account.'
+        : 'Enter the institutional email added for your admin account.';
 
     return Scaffold(
       backgroundColor: AppColors.canvas,
@@ -137,10 +183,10 @@ class _RegisterUserScreenState extends ConsumerState<RegisterUserScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        const Text(
-                          'Complete registration',
+                        Text(
+                          title,
                           textAlign: TextAlign.center,
-                          style: TextStyle(
+                          style: const TextStyle(
                             fontSize: 27,
                             fontWeight: FontWeight.w800,
                             color: AppColors.navy,
@@ -148,10 +194,10 @@ class _RegisterUserScreenState extends ConsumerState<RegisterUserScreen> {
                           ),
                         ),
                         const SizedBox(height: 8),
-                        const Text(
-                          'Set a password to activate your admin account.',
+                        Text(
+                          description,
                           textAlign: TextAlign.center,
-                          style: TextStyle(
+                          style: const TextStyle(
                             fontSize: 12.5,
                             fontWeight: FontWeight.w500,
                             color: AppColors.mutedStrong,
@@ -169,85 +215,94 @@ class _RegisterUserScreenState extends ConsumerState<RegisterUserScreen> {
                         const SizedBox(height: 10),
                         LoginField(
                           controller: _emailController,
+                          validator: _validateEmail,
                           hint: 'e.g. admin@campus.edu',
                           icon: Icons.mail_outline_rounded,
-                          readOnly: true,
+                          readOnly: isPasswordStep,
                           keyboardType: TextInputType.emailAddress,
+                          autofillHints: isPasswordStep
+                              ? null
+                              : const [AutofillHints.username],
+                          textInputAction: isPasswordStep
+                              ? TextInputAction.done
+                              : TextInputAction.next,
                         ),
-                        const SizedBox(height: 18),
-                        const Text(
-                          'Password',
-                          style: TextStyle(
-                            fontSize: 15.5,
-                            fontWeight: FontWeight.w700,
-                            color: AppColors.navy,
-                          ),
-                        ),
-                        const SizedBox(height: 10),
-                        LoginField(
-                          controller: _passwordController,
-                          validator: _validatePassword,
-                          hint: '••••••••••••••',
-                          icon: Icons.vpn_key_outlined,
-                          obscureText: _obscurePassword,
-                          autofillHints: const [AutofillHints.newPassword],
-                          textInputAction: TextInputAction.next,
-                          suffix: IconButton(
-                            onPressed: () {
-                              setState(
-                                () => _obscurePassword = !_obscurePassword,
-                              );
-                            },
-                            icon: Icon(
-                              _obscurePassword
-                                  ? Icons.visibility_outlined
-                                  : Icons.visibility_off_outlined,
-                              size: 20,
-                              color: AppColors.muted,
+                        if (isPasswordStep) ...[
+                          const SizedBox(height: 18),
+                          const Text(
+                            'Password',
+                            style: TextStyle(
+                              fontSize: 15.5,
+                              fontWeight: FontWeight.w700,
+                              color: AppColors.navy,
                             ),
-                            splashRadius: 20,
-                            tooltip: _obscurePassword
-                                ? 'Show password'
-                                : 'Hide password',
                           ),
-                        ),
-                        const SizedBox(height: 18),
-                        const Text(
-                          'Confirm password',
-                          style: TextStyle(
-                            fontSize: 15.5,
-                            fontWeight: FontWeight.w700,
-                            color: AppColors.navy,
-                          ),
-                        ),
-                        const SizedBox(height: 10),
-                        LoginField(
-                          controller: _confirmPasswordController,
-                          validator: _validateConfirmation,
-                          hint: '••••••••••••••',
-                          icon: Icons.vpn_key_outlined,
-                          obscureText: _obscureConfirmation,
-                          textInputAction: TextInputAction.done,
-                          suffix: IconButton(
-                            onPressed: () {
-                              setState(
-                                () => _obscureConfirmation =
-                                    !_obscureConfirmation,
-                              );
-                            },
-                            icon: Icon(
-                              _obscureConfirmation
-                                  ? Icons.visibility_outlined
-                                  : Icons.visibility_off_outlined,
-                              size: 20,
-                              color: AppColors.muted,
+                          const SizedBox(height: 10),
+                          LoginField(
+                            controller: _passwordController,
+                            validator: _validatePassword,
+                            hint: '••••••••••••••',
+                            icon: Icons.vpn_key_outlined,
+                            obscureText: _obscurePassword,
+                            autofillHints: const [AutofillHints.newPassword],
+                            textInputAction: TextInputAction.next,
+                            suffix: IconButton(
+                              onPressed: () {
+                                setState(
+                                  () => _obscurePassword = !_obscurePassword,
+                                );
+                              },
+                              icon: Icon(
+                                _obscurePassword
+                                    ? Icons.visibility_outlined
+                                    : Icons.visibility_off_outlined,
+                                size: 20,
+                                color: AppColors.muted,
+                              ),
+                              splashRadius: 20,
+                              tooltip: _obscurePassword
+                                  ? 'Show password'
+                                  : 'Hide password',
                             ),
-                            splashRadius: 20,
-                            tooltip: _obscureConfirmation
-                                ? 'Show password'
-                                : 'Hide password',
                           ),
-                        ),
+                          const SizedBox(height: 18),
+                          const Text(
+                            'Confirm password',
+                            style: TextStyle(
+                              fontSize: 15.5,
+                              fontWeight: FontWeight.w700,
+                              color: AppColors.navy,
+                            ),
+                          ),
+                          const SizedBox(height: 10),
+                          LoginField(
+                            controller: _confirmPasswordController,
+                            validator: _validateConfirmation,
+                            hint: '••••••••••••••',
+                            icon: Icons.vpn_key_outlined,
+                            obscureText: _obscureConfirmation,
+                            textInputAction: TextInputAction.done,
+                            suffix: IconButton(
+                              onPressed: () {
+                                setState(
+                                  () => _obscureConfirmation =
+                                      !_obscureConfirmation,
+                                );
+                              },
+                              icon: Icon(
+                                _obscureConfirmation
+                                    ? Icons.visibility_outlined
+                                    : Icons.visibility_off_outlined,
+                                size: 20,
+                                color: AppColors.muted,
+                              ),
+                              splashRadius: 20,
+                              tooltip: _obscureConfirmation
+                                  ? 'Show password'
+                                  : 'Hide password',
+                            ),
+                          ),
+                        ],
                         if (errorMessage != null) ...[
                           const SizedBox(height: 18),
                           Text(
@@ -261,10 +316,16 @@ class _RegisterUserScreenState extends ConsumerState<RegisterUserScreen> {
                         ],
                         const SizedBox(height: 22),
                         LoginButton(
-                          onPressed: _handleRegister,
-                          isLoading: authState.isLoading,
-                          label: 'Create Account',
-                          icon: Icons.person_add_alt_1_rounded,
+                          onPressed: isPasswordStep
+                              ? _handleRegister
+                              : _handleCheckEmail,
+                          isLoading: isLoading,
+                          label: isPasswordStep
+                              ? 'Create Account'
+                              : 'Check Email',
+                          icon: isPasswordStep
+                              ? Icons.person_add_alt_1_rounded
+                              : Icons.search_rounded,
                         ),
                         const SizedBox(height: 8),
                         TextButton(

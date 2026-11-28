@@ -90,6 +90,7 @@ final authControllerProvider = NotifierProvider<AuthController, AuthState>(() {
   return AuthController(
     loginUseCaseProvider: loginUseCaseProvider,
     checkLoginAccessUseCaseProvider: checkLoginAccessUseCaseProvider,
+    getUserAuthorizationUseCaseProvider: getUserAuthorizationUseCaseProvider,
     registerUserUseCaseProvider: registerUserUseCaseProvider,
   );
 });

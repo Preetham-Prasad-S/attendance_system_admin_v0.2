@@ -9,33 +9,40 @@ class LoginButton extends StatelessWidget {
     required this.isLoading,
     this.label = 'Sign In',
     this.icon = Icons.login_rounded,
+    this.outlined = false,
   });
 
   final VoidCallback onPressed;
   final bool isLoading;
   final String label;
   final IconData icon;
+  final bool outlined;
 
   @override
   Widget build(BuildContext context) {
+    final spinnerColor = outlined ? AppColors.primary : AppColors.white;
+
     return SizedBox(
       height: 50,
       child: ElevatedButton(
         onPressed: onPressed,
         style: ElevatedButton.styleFrom(
-          backgroundColor: AppColors.primary,
-          foregroundColor: AppColors.white,
+          backgroundColor: outlined ? AppColors.white : AppColors.primary,
+          foregroundColor: outlined ? AppColors.primary : AppColors.white,
           elevation: 0,
           shadowColor: AppColors.transperant,
+          side: outlined
+              ? const BorderSide(color: AppColors.primary)
+              : BorderSide.none,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
         ),
         child: isLoading
-            ? const SizedBox(
+            ? SizedBox(
                 width: 22,
                 height: 22,
                 child: CircularProgressIndicator(
                   strokeWidth: 2.5,
-                  color: AppColors.white,
+                  color: spinnerColor,
                 ),
               )
             : Row(

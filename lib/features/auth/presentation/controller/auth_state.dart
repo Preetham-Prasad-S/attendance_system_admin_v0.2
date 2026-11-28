@@ -31,6 +31,19 @@ final class AuthFailure extends AuthState {
   final String message;
 }
 
+final class AuthRegistrationStarted extends AuthState {
+  const AuthRegistrationStarted({
+    this.errorMessage,
+    this.isCheckingEmail = false,
+  });
+
+  final String? errorMessage;
+  final bool isCheckingEmail;
+
+  @override
+  bool get isLoading => isCheckingEmail;
+}
+
 final class AuthRegistrationRequired extends AuthState {
   const AuthRegistrationRequired({
     required this.email,
